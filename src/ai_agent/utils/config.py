@@ -12,15 +12,9 @@ from dataclasses import dataclass, field
 from .exceptions import ConfigurationError, ValidationError
 
 
-def _get_ollama_model_from_settings() -> str:
-    """Get the Ollama model from settings manager, with fallback to default"""
-    try:
-        from .settings_manager import get_settings_manager
-        settings = get_settings_manager()
-        model = settings.get_ollama_model()
-        return model if model else "llama3.2:latest"
-    except Exception:
-        return "llama3.2:latest"
+def _get_default_ollama_model() -> str:
+    """Get the default Ollama model"""
+    return "llama3.2:latest"
 
 
 @dataclass
@@ -39,7 +33,7 @@ class APIConfig:
     """API configuration"""
     # Local Ollama configuration
     local_endpoint: str = "http://localhost:11434"
-    local_model: str = field(default_factory=lambda: _get_ollama_model_from_settings())
+    local_model: str = field(default_factory=lambda: _get_default_ollama_model())
     
     
     # General settings
@@ -78,7 +72,7 @@ class VerificationConfig:
     confidence_threshold: float = 0.8
     max_verification_attempts: int = 3
     max_regenerations: int = 2
-    verification_model: str = field(default_factory=lambda: _get_ollama_model_from_settings())
+    verification_model: str = field(default_factory=lambda: _get_default_ollama_model())
     verification_timeout: int = 60
     auto_regenerate: bool = True
 
@@ -243,30 +237,9 @@ class ConfigManager:
     def _create_config_from_raw(self) -> Config:
         """Create Config object from raw configuration"""
         try:
-            # Get API config dict and override with settings manager if needed
+            # Get API config dict and verification config dict
             api_config_dict = self._raw_config.get("api", {})
             verification_config_dict = self._raw_config.get("verification", {})
-            
-            # Override model values from settings manager to ensure user selection takes precedence
-            ollama_model = None
-            try:
-                # Read settings file directly to avoid circular dependency with SettingsManager
-                import json
-                settings_path = Path(__file__).parent.parent.parent.parent / ".vexis" / "settings.json"
-                if settings_path.exists():
-                    with open(settings_path, 'r') as f:
-                        settings_data = json.load(f)
-                        ollama_model = settings_data.get("ollama_model")
-                        if ollama_model:
-                            api_config_dict["local_model"] = ollama_model
-                            verification_config_dict["verification_model"] = ollama_model
-                            # Debug logging
-                            import logging
-                            logging.getLogger("config").info(f"Overriding config with settings model: {ollama_model}")
-            except Exception as e:
-                import logging
-                logging.getLogger("config").warning(f"Could not override from settings file: {e}")
-                pass  # Fall back to config file values or defaults
             
             return Config(
                 logging=LoggingConfig(**self._raw_config.get("logging", {})),

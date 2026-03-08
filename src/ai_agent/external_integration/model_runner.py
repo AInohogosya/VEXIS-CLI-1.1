@@ -11,7 +11,6 @@ from enum import Enum
 from .vision_api_client import VisionAPIClient, APIRequest, APIProvider
 from ..utils.exceptions import ValidationError
 from ..utils.logger import get_logger
-from ..utils.config import load_config
 
 
 class TaskType(Enum):
@@ -169,15 +168,9 @@ class ModelRunner:
             # Format prompt
             prompt = self._format_prompt(request)
 
-            # Determine provider and model
-            preferred_provider = self.config.get("preferred_provider", "ollama")
-
-            if preferred_provider == "google" and self.config.get("google_api_key"):
-                provider_enum = APIProvider.GOOGLE
-                model_name = self.config.get("google_model", self.DEFAULT_GOOGLE_MODEL)
-            else:
-                provider_enum = APIProvider.OLLAMA
-                model_name = self.config.get("local_model", self.DEFAULT_OLLAMA_MODEL)
+    # Use hardcoded Ollama provider and model
+            provider_enum = APIProvider.OLLAMA
+            model_name = self.DEFAULT_OLLAMA_MODEL
 
             # Create API request
             api_request = APIRequest(
@@ -199,7 +192,7 @@ class ModelRunner:
                 content=api_response.content,
                 task_type=request.task_type,
                 model=api_response.model or model_name,
-                provider=api_response.provider or preferred_provider,
+                provider=api_response.provider or "ollama",
                 tokens_used=api_response.tokens_used,
                 cost=api_response.cost,
                 latency=time.time() - start_time,
@@ -219,35 +212,6 @@ class ModelRunner:
                     task_type=request.task_type.value,
                     error=model_response.error,
                 )
-                
-                # Enhanced error handling for authentication issues
-                if "Authentication required" in model_response.error:
-                    try:
-                        from ..utils.ollama_error_handler import handle_ollama_error
-                        context = {
-                            'model_name': model_response.model,
-                            'operation': 'model_execution'
-                        }
-                        handle_ollama_error(model_response.error, context, display_to_user=True)
-                        
-                        # Prompt user to sign in
-                        import sys
-                        if sys.stdin.isatty():  # Only prompt if running in terminal
-                            try:
-                                choice = input("\nWould you like to sign in to Ollama now? (y/n): ").lower().strip()
-                                if choice in ['y', 'yes']:
-                                    import subprocess
-                                    print("\n🔐 Opening Ollama sign-in...")
-                                    result = subprocess.run(["ollama", "signin"], capture_output=False, text=True)
-                                    if result.returncode == 0:
-                                        print("✓ Sign-in initiated. Please complete it in your browser.")
-                                        print("Then try running your command again.")
-                                    else:
-                                        print("✗ Failed to initiate sign-in.")
-                            except (KeyboardInterrupt, EOFError):
-                                print("\nOperation cancelled.")
-                    except ImportError:
-                        pass  # Fallback to just logging the error
 
             return model_response
 
