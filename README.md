@@ -365,10 +365,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- 📧 Email: support@vexis-cli.com
-- 💬 Discord: [Join our Discord server](https://discord.gg/vexis-cli)
-- 🐦 Twitter: [@VEXIS_CLI](https://twitter.com/VEXIS_CLI)
-
+- 📧 Email: AInohogosya@proton.me
+- X: [AInohogosya](https://twitter.com/AInohogosya)
+- Home Page https://ainohogosya.github.io/home-page/
 ---
 
 <div align="center">
