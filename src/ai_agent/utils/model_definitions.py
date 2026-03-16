@@ -504,6 +504,7 @@ MODEL_FAMILIES = {
                 "icon": "🚀",
                 "models": {
                     "glm-5:cloud": {"name": "GLM-5 Cloud", "desc": "744B total parameters • 40B active • Cloud only", "icon": "👑"},
+                    "glm-5-turbo": {"name": "GLM-5-Turbo (New)", "desc": "OpenClaw Native • Tool invocation • Agent tasks", "icon": "⚡"},
                 }
             }
         }
