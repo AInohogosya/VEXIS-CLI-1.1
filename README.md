@@ -310,7 +310,7 @@ python3 test_improved_prompts.py --benchmark
 
 ### 💬 **Get Help**
 - 📖 [Comprehensive Documentation](./docs/)
-- 🐛 [Advanced Issue Tracker](https://github.com/AInohogosya/VEXIS-CLI-2/issues)
+- 🐛 [Advanced Issues: GitHub Issues](https://github.com/AInohogosya/VEXIS-CLI-2/issues)
 - 💬 [Community Discussions](https://github.com/AInohogosya/VEXIS-CLI-2/discussions)
 - 🏢 [Enterprise Support](mailto:enterprise@vexis-project.com)
 
@@ -327,7 +327,7 @@ python3 test_improved_prompts.py --benchmark
 
 **VEXIS-CLI-2: Where advanced AI meets precise command execution**
 
-[🚀 Get Started Now](#installation) • [⭐ Star on GitHub](https://github.com/AInohogosya/VEXIS-CLI-2) • [📖 Explore Documentation](./docs/) • [🏢 Enterprise Support](AInohogosya@proton.me)
+[🚀 Get Started Now](#installation) • [⭐ Star on GitHub](https://github.com/AInohogosya/VEXIS-CLI-2) • [📖 Explore Documentation](./docs/) • [🏢 Enterprise Support](mailto:AInohogosya@proton.me)
 
 ---
 

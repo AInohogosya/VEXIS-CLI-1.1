@@ -35,8 +35,8 @@ VEXIS-CLI-2.0 is an intelligent command-line agent that transforms natural langu
 
 ```bash
 # Clone the repository
-git clone https://github.com/AInohogosya/VEXIS-CLI-2.0.git
-cd VEXIS-CLI-2.0
+git clone https://github.com/AInohogosya/VEXIS-CLI-2.git
+cd VEXIS-CLI-2
 
 # Run your first command (dependencies auto-installed)
 python3 run.py "list files in current directory"
@@ -46,8 +46,8 @@ python3 run.py "list files in current directory"
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/AInohogosya/VEXIS-CLI-2.0.git
-cd VEXIS-CLI-2.0
+git clone https://github.com/AInohogosya/VEXIS-CLI-2.git
+cd VEXIS-CLI-2
 
 # 2. Create virtual environment (optional but recommended)
 python3 -m venv venv
@@ -398,7 +398,7 @@ python3 run.py "your command" --debug
 ## Support & Community
 
 - **Documentation**: [Full docs](./docs/)
-- **Issues**: [GitHub Issues](https://github.com/AInohogosya/VEXIS-CLI-2.0/issues)
+- **Issues**: [GitHub Issues](https://github.com/AInohogosya/VEXIS-CLI-2/issues)
 - **Updates**: Check the repository regularly for updates
 
 ---

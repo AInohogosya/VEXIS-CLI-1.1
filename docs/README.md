@@ -1,8 +1,8 @@
-# VEXIS-CLI-1.2 Technical Documentation
+# VEXIS-CLI-2 Technical Documentation
 
 ## Overview
 
-This directory contains comprehensive technical documentation for VEXIS-CLI-1.2, including architecture details, troubleshooting guides, and development resources.
+This directory contains comprehensive technical documentation for VEXIS-CLI-2, including architecture details, troubleshooting guides, and development resources.
 
 ## Document Structure
 
@@ -19,13 +19,10 @@ This directory contains comprehensive technical documentation for VEXIS-CLI-1.2,
 
 ### Development Resources
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development setup and guidelines
-- **[TESTING.md](./TESTING.md)** - Testing strategies and frameworks
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contribution guidelines
 
 ### Deployment & Operations
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Deployment strategies and configurations
-- **[MONITORING.md](./MONITORING.md)** - Monitoring and logging setup
-- **[PERFORMANCE.md](./PERFORMANCE.md)** - Performance optimization guide
 
 ## Quick Navigation
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This comprehensive API reference covers all public interfaces, classes, methods, and data structures available in VEXIS-CLI-1.2.
+This comprehensive API reference covers all public interfaces, classes, methods, and data structures available in VEXIS-CLI-2.
 
 ## Core Components
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-VEXIS-CLI-1.2 includes comprehensive error handling with user-friendly guidance, automatic recovery mechanisms, and detailed error reporting. This guide covers all error types, handling strategies, and troubleshooting approaches.
+VEXIS-CLI-2 includes comprehensive error handling with user-friendly guidance, automatic recovery mechanisms, and detailed error reporting. This guide covers all error types, handling strategies, and troubleshooting approaches.
 
 ## Error Handling Architecture
 

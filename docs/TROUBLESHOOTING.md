@@ -2,7 +2,7 @@
 
 ## Overview
 
-This comprehensive troubleshooting guide covers common issues, their causes, and step-by-step solutions for VEXIS-CLI-1.2.
+This comprehensive troubleshooting guide covers common issues, their causes, and step-by-step solutions for VEXIS-CLI-2.
 
 ## Quick Diagnosis
 
