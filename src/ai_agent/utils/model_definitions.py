@@ -70,6 +70,7 @@ MODEL_FAMILIES = {
                     "gemma3:4b": {"name": "Gemma 3 4B", "desc": "4B parameters • Multimodal • 128K context", "icon": "💪"},
                     "gemma3:1b": {"name": "Gemma 3 1B", "desc": "1B parameters • Text only • 32K context", "icon": "🪶"},
                     "gemma3:270m": {"name": "Gemma 3 270M", "desc": "270M parameters • Text only • 32K context", "icon": "✨"},
+                    "gemma3:latest": {"name": "Gemma 3 Latest", "desc": "4B parameters • Multimodal • 128K context", "icon": "⭐"},
                 }
             },
             "gemma3n": {
@@ -80,6 +81,18 @@ MODEL_FAMILIES = {
                     "gemma3n:e4b": {"name": "Gemma 3n E4B", "desc": "4B effective • Multimodal • On-device optimized", "icon": "🧠"},
                     "gemma3n:e2b": {"name": "Gemma 3n E2B", "desc": "2B effective • Multimodal • Ultra efficient", "icon": "⚡"},
                     "gemma3n:latest": {"name": "Gemma 3n Latest", "desc": "4B effective • Multimodal • On-device optimized", "icon": "⭐"},
+                }
+            },
+            "gemma4": {
+                "name": "Gemma 4 (New)",
+                "description": "Latest generation Gemma models with frontier-level performance",
+                "icon": "💎",
+                "models": {
+                    "gemma4:e4b": {"name": "Gemma 4 E4B (New)", "desc": "4B effective • Multimodal • Frontier performance", "icon": "⚡"},
+                    "gemma4:e2b": {"name": "Gemma 4 E2B (New)", "desc": "2B effective • Multimodal • Efficient", "icon": "🪶"},
+                    "gemma4:26b": {"name": "Gemma 4 26B (New)", "desc": "26B parameters • Multimodal • High performance", "icon": "💪"},
+                    "gemma4:31b": {"name": "Gemma 4 31B (New)", "desc": "31B parameters • Multimodal • Advanced", "icon": "🧠"},
+                    "gemma4:latest": {"name": "Gemma 4 Latest (New)", "desc": "31B parameters • Multimodal • Frontier performance", "icon": "⭐"},
                 }
             }
         }
@@ -97,6 +110,11 @@ MODEL_FAMILIES = {
                     "deepseek-r1:32b": {"name": "DeepSeek R1 32B", "desc": "32B parameters • Reasoning • 128K context", "icon": "💪"},
                     "deepseek-r1:14b": {"name": "DeepSeek R1 14B", "desc": "14B parameters • Reasoning • 128K context", "icon": "🌟"},
                     "deepseek-r1:8b": {"name": "DeepSeek R1 8B", "desc": "8B parameters • Reasoning • 128K context", "icon": "⚡"},
+                    "deepseek-r1:7b": {"name": "DeepSeek R1 7B", "desc": "7B parameters • Reasoning • 128K context", "icon": "🔹"},
+                    "deepseek-r1:1.5b": {"name": "DeepSeek R1 1.5B", "desc": "1.5B parameters • Reasoning • 128K context", "icon": "✨"},
+                    "deepseek-r1:latest": {"name": "DeepSeek R1 Latest", "desc": "8B parameters • Reasoning • 128K context", "icon": "⭐"},
+                    "deepseek-r1:70b": {"name": "DeepSeek R1 70B", "desc": "70B parameters • Reasoning • 128K context", "icon": "🧠"},
+                    "deepseek-r1:671b": {"name": "DeepSeek R1 671B", "desc": "671B parameters • Reasoning • 160K context", "icon": "👑"},
                 }
             },
             "deepseek-vision": {
@@ -121,7 +139,9 @@ MODEL_FAMILIES = {
                 "description": "Enhanced version of DeepSeek V3 with improved capabilities",
                 "icon": "🌟",
                 "models": {
-                    "deepseek-v3.1:671b-cloud": {"name": "DeepSeek V3.1 671B Cloud", "desc": "671B parameters • Enhanced • Cloud only", "icon": "🚀"},
+                    "deepseek-v3.1:latest": {"name": "DeepSeek V3.1 Latest", "desc": "671B parameters • Enhanced • 160K context", "icon": "⭐"},
+                    "deepseek-v3.1:671b": {"name": "DeepSeek V3.1 671B", "desc": "671B parameters • Enhanced • 160K context", "icon": "👑"},
+                    "deepseek-v3.1:671b-cloud": {"name": "DeepSeek V3.1 671B Cloud", "desc": "671B parameters • Enhanced • Cloud only", "icon": "☁️"},
                 }
             },
             "deepseek-v3.2": {
@@ -155,11 +175,12 @@ MODEL_FAMILIES = {
                 "description": "Lightweight state-of-the-art open models",
                 "icon": "🧠",
                 "models": {
-                    "phi3:14b": {"name": "Phi-3 14B", "desc": "14B parameters • Medium • 128K context", "icon": "💪"},
+                    "phi3:14b": {"name": "Phi-3 Medium 14B", "desc": "14B parameters • Medium • 128K context", "icon": "💪"},
                     "phi3:3.8b": {"name": "Phi-3 Mini 3.8B", "desc": "3.8B parameters • Mini • 128K context", "icon": "🪶"},
                     "phi3:mini": {"name": "Phi-3 Mini", "desc": "3.8B parameters • Mini • 4K context", "icon": "⚡"},
-                    "phi3:medium": {"name": "Phi-3 Medium", "desc": "14B parameters • Medium • 4K context", "icon": "�"},
+                    "phi3:medium": {"name": "Phi-3 Medium", "desc": "14B parameters • Medium • 4K context", "icon": "🧠"},
                     "phi3:medium-128k": {"name": "Phi-3 Medium 128K", "desc": "14B parameters • Medium • 128K context", "icon": "💪"},
+                    "phi3:latest": {"name": "Phi-3 Latest", "desc": "3.8B parameters • Mini • 128K context", "icon": "⭐"},
                 }
             },
             "phi4": {
@@ -168,6 +189,7 @@ MODEL_FAMILIES = {
                 "icon": "🚀",
                 "models": {
                     "phi4:14b": {"name": "Phi-4 14B", "desc": "14B parameters • State-of-the-art • 16K context", "icon": "🧠"},
+                    "phi4:latest": {"name": "Phi-4 Latest", "desc": "14B parameters • State-of-the-art • 16K context", "icon": "⭐"},
                 }
             }
         }
@@ -191,6 +213,7 @@ MODEL_FAMILIES = {
                 "description": "Mistral's flagship Large 2 model with advanced reasoning",
                 "models": {
                     "mistral-large:123b": {"name": "Mistral Large 2 123B", "desc": "123B parameters • 128K context • Advanced reasoning", "icon": "👑"},
+                    "mistral-large:latest": {"name": "Mistral Large 2 Latest", "desc": "123B parameters • 128K context • Advanced reasoning", "icon": "⭐"},
                 }
             },
             "mistral-large-3": {
@@ -205,7 +228,13 @@ MODEL_FAMILIES = {
                 "description": "Family designed for edge deployment with wide hardware compatibility",
                 "icon": "🪶",
                 "models": {
-                    "ministral-3:cloud": {"name": "Ministral 3 Cloud", "desc": "Edge deployment • Vision capabilities • Cloud only", "icon": "🌟"},
+                    "ministral-3:3b": {"name": "Ministral 3 3B", "desc": "3B parameters • Edge • Vision • 256K context", "icon": "🪶"},
+                    "ministral-3:8b": {"name": "Ministral 3 8B", "desc": "8B parameters • Edge • Vision • 256K context", "icon": "💪"},
+                    "ministral-3:14b": {"name": "Ministral 3 14B", "desc": "14B parameters • Edge • Vision • 256K context", "icon": "🧠"},
+                    "ministral-3:latest": {"name": "Ministral 3 Latest", "desc": "8B parameters • Edge • Vision • 256K context", "icon": "⭐"},
+                    "ministral-3:3b-cloud": {"name": "Ministral 3 3B Cloud", "desc": "3B parameters • Vision • Cloud only", "icon": "☁️"},
+                    "ministral-3:8b-cloud": {"name": "Ministral 3 8B Cloud", "desc": "8B parameters • Vision • Cloud only", "icon": "☁️"},
+                    "ministral-3:14b-cloud": {"name": "Ministral 3 14B Cloud", "desc": "14B parameters • Vision • Cloud only", "icon": "☁️"},
                 }
             }
         }
@@ -244,6 +273,7 @@ MODEL_FAMILIES = {
                     "qwen3:4b": {"name": "Qwen 3 4B", "desc": "4B parameters • Dense • 256K context", "icon": "🪶"},
                     "qwen3:1.7b": {"name": "Qwen 3 1.7B", "desc": "1.7B parameters • Dense • 40K context", "icon": "✨"},
                     "qwen3:0.6b": {"name": "Qwen 3 0.6B", "desc": "0.6B parameters • Dense • 40K context", "icon": "🔹"},
+                    "qwen3:latest": {"name": "Qwen 3 Latest", "desc": "8B parameters • Dense • 40K context", "icon": "⭐"},
                 }
             },
             "qwen3-coder": {
@@ -251,8 +281,10 @@ MODEL_FAMILIES = {
                 "description": "Advanced agentic coding models",
                 "icon": "💻",
                 "models": {
-                    "qwen3-coder:30b": {"name": "Qwen 3 Coder 30B", "desc": "30B parameters • Agentic coding • Cloud only", "icon": "🧠"},
-                    "qwen3-coder:480b-cloud": {"name": "Qwen 3 Coder 480B Cloud", "desc": "480B parameters • 256K context • Advanced coding • Cloud only", "icon": "👑"},
+                    "qwen3-coder:30b": {"name": "Qwen 3 Coder 30B", "desc": "30B parameters • Agentic coding • 256K context", "icon": "🧠"},
+                    "qwen3-coder:480b": {"name": "Qwen 3 Coder 480B", "desc": "480B parameters • 256K context • Advanced coding", "icon": "👑"},
+                    "qwen3-coder:480b-cloud": {"name": "Qwen 3 Coder 480B Cloud", "desc": "480B parameters • 256K context • Cloud only", "icon": "☁️"},
+                    "qwen3-coder:latest": {"name": "Qwen 3 Coder Latest", "desc": "30B parameters • Agentic coding • 256K context", "icon": "⭐"},
                 }
             },
             "qwen3-vl": {
@@ -260,22 +292,30 @@ MODEL_FAMILIES = {
                 "description": "Most powerful vision-language model in the Qwen family",
                 "icon": "👁️",
                 "models": {
-                    "qwen3-vl:235b-cloud": {"name": "Qwen 3 VL 235B Cloud", "desc": "235B parameters • Vision-language • Cloud only", "icon": "👑"},
+                    "qwen3-vl:2b": {"name": "Qwen 3 VL 2B", "desc": "2B parameters • Vision-language • 256K context", "icon": "🪶"},
+                    "qwen3-vl:4b": {"name": "Qwen 3 VL 4B", "desc": "4B parameters • Vision-language • 256K context", "icon": "⚡"},
+                    "qwen3-vl:8b": {"name": "Qwen 3 VL 8B", "desc": "8B parameters • Vision-language • 256K context", "icon": "💪"},
+                    "qwen3-vl:30b": {"name": "Qwen 3 VL 30B", "desc": "30B parameters • Vision-language • 256K context", "icon": "🧠"},
+                    "qwen3-vl:32b": {"name": "Qwen 3 VL 32B", "desc": "32B parameters • Vision-language • 256K context", "icon": "🧠"},
+                    "qwen3-vl:235b": {"name": "Qwen 3 VL 235B", "desc": "235B parameters • Vision-language • 256K context", "icon": "👑"},
+                    "qwen3-vl:235b-cloud": {"name": "Qwen 3 VL 235B Cloud", "desc": "235B parameters • Vision-language • Cloud only", "icon": "☁️"},
+                    "qwen3-vl:latest": {"name": "Qwen 3 VL Latest", "desc": "8B parameters • Vision-language • 256K context", "icon": "⭐"},
                 }
             },
             "qwen3.5": {
-                "name": "Qwen 3.5",
+                "name": "Qwen 3.5 (New)",
                 "description": "Open-source multimodal models with exceptional utility and performance",
                 "icon": "🌟",
                 "models": {
-                    "qwen3.5:122b": {"name": "Qwen 3.5 122B", "desc": "122B parameters • Multimodal • Frontier performance", "icon": "👑"},
-                    "qwen3.5:35b": {"name": "Qwen 3.5 35B", "desc": "35B parameters • Multimodal • Advanced performance", "icon": "🧠"},
-                    "qwen3.5:27b": {"name": "Qwen 3.5 27B", "desc": "27B parameters • Multimodal • High performance", "icon": "💪"},
-                    "qwen3.5:9b": {"name": "Qwen 3.5 9B", "desc": "9B parameters • Multimodal • Exceptional performance", "icon": "🧠"},
-                    "qwen3.5:4b": {"name": "Qwen 3.5 4B", "desc": "4B parameters • Multimodal • Efficient performance", "icon": "💪"},
-                    "qwen3.5:2b": {"name": "Qwen 3.5 2B", "desc": "2B parameters • Multimodal • Lightweight", "icon": "⚡"},
-                    "qwen3.5:0.8b": {"name": "Qwen 3.5 0.8B", "desc": "0.8B parameters • Multimodal • Ultra lightweight", "icon": "🪶"},
-                    "qwen3.5:cloud": {"name": "Qwen 3.5 Cloud", "desc": "Multimodal • Exceptional performance • Cloud only", "icon": "🌟"},
+                    "qwen3.5:122b": {"name": "Qwen 3.5 122B (New)", "desc": "122B parameters • Multimodal • Frontier performance", "icon": "👑"},
+                    "qwen3.5:35b": {"name": "Qwen 3.5 35B (New)", "desc": "35B parameters • Multimodal • Advanced performance", "icon": "🧠"},
+                    "qwen3.5:27b": {"name": "Qwen 3.5 27B (New)", "desc": "27B parameters • Multimodal • High performance", "icon": "💪"},
+                    "qwen3.5:9b": {"name": "Qwen 3.5 9B (New)", "desc": "9B parameters • Multimodal • Exceptional performance", "icon": "🧠"},
+                    "qwen3.5:4b": {"name": "Qwen 3.5 4B (New)", "desc": "4B parameters • Multimodal • Efficient performance", "icon": "💪"},
+                    "qwen3.5:2b": {"name": "Qwen 3.5 2B (New)", "desc": "2B parameters • Multimodal • Lightweight", "icon": "⚡"},
+                    "qwen3.5:0.8b": {"name": "Qwen 3.5 0.8B (New)", "desc": "0.8B parameters • Multimodal • Ultra lightweight", "icon": "🪶"},
+                    "qwen3.5:cloud": {"name": "Qwen 3.5 Cloud (New)", "desc": "Multimodal • Exceptional performance • Cloud only", "icon": "🌟"},
+                    "qwen3.5:latest": {"name": "Qwen 3.5 Latest (New)", "desc": "9B parameters • Multimodal • Exceptional performance", "icon": "⭐"},
                 }
             },
             "qwen3-next": {
@@ -330,7 +370,10 @@ MODEL_FAMILIES = {
                 "description": "Efficient, open, and intelligent agentic models",
                 "icon": "🧠",
                 "models": {
-                    "nemotron-3-nano:30b-cloud": {"name": "Nemotron 3 Nano 30B Cloud", "desc": "30B parameters • Intelligent agentic • Cloud only", "icon": "🌟"},
+                    "nemotron-3-nano:4b": {"name": "Nemotron 3 Nano 4B (New)", "desc": "4B parameters • Intelligent agentic • Edge optimized", "icon": "⚡"},
+                    "nemotron-3-nano:30b": {"name": "Nemotron 3 Nano 30B", "desc": "30B parameters • Intelligent agentic • Cloud only", "icon": "🌟"},
+                    "nemotron-3-nano:latest": {"name": "Nemotron 3 Nano Latest", "desc": "30B parameters • Intelligent agentic • Cloud only", "icon": "⭐"},
+                    "nemotron-3-nano:30b-cloud": {"name": "Nemotron 3 Nano 30B Cloud", "desc": "30B parameters • Intelligent agentic • Cloud only", "icon": "☁️"},
                 }
             },
             "granite4": {
@@ -358,6 +401,7 @@ MODEL_FAMILIES = {
                 "icon": "🔍",
                 "models": {
                     "command-r:35b": {"name": "Command R 35B", "desc": "35B parameters • RAG capabilities • 128K context", "icon": "🧠"},
+                    "command-r:latest": {"name": "Command R Latest", "desc": "35B parameters • RAG capabilities • 128K context", "icon": "⭐"},
                 }
             },
             "command-r7b": {
@@ -488,6 +532,7 @@ MODEL_FAMILIES = {
                 "icon": "🧠",
                 "models": {
                     "glm4:latest": {"name": "GLM-4 Latest", "desc": "9B parameters • 128K context • Multilingual", "icon": "⭐"},
+                    "glm4:9b": {"name": "GLM-4 9B", "desc": "9B parameters • 128K context • Multilingual", "icon": "🧠"},
                 }
             },
             "glm-4.7": {
@@ -499,15 +544,13 @@ MODEL_FAMILIES = {
                 }
             },
             "glm-5": {
-                "name": "GLM-5",
+                "name": "GLM-5 (New)",
                 "description": "Strong reasoning and agentic model with 744B total parameters",
                 "icon": "🚀",
                 "models": {
-                    "glm-5": {"name": "GLM-5", "desc": "744B total parameters • 40B active • 128K context • Official API", "icon": "👑"},
-                    "glm-5:cloud": {"name": "GLM-5 Cloud", "desc": "744B total parameters • 40B active • Cloud only", "icon": "☁️"},
-                    "glm-5-turbo": {"name": "GLM-5-Turbo", "desc": "Efficient variant • Tool invocation • Agent tasks", "icon": "⚡"},
+                    "glm-5:cloud": {"name": "GLM-5 Cloud (New)", "desc": "744B total parameters • 40B active • Cloud only", "icon": "☁️"},
                 }
-            }
+            },
         }
     },
     "openai": {
@@ -534,19 +577,19 @@ MODEL_FAMILIES = {
         "priority": 15,
         "subfamilies": {
             "minimax-latest": {
-                "name": "Latest Models",
+                "name": "Latest Models (New)",
                 "description": "Most recent MiniMax models with cutting-edge capabilities",
-                "icon": "�",
+                "icon": "🔥",
                 "models": {
-                    "minimax-m2.7:cloud": {"name": "MiniMax M2.7 (Latest)", "desc": "First M2-series model • Agent teams • Complex skills • 200K context • Cloud only", "icon": "🔥"},
+                    "minimax-m2.7:cloud": {"name": "MiniMax M2.7 (Latest) (New)", "desc": "First M2-series model • Agent teams • Complex skills • 200K context • Cloud only", "icon": "🔥"},
                 }
             },
             "minimax-productivity": {
-                "name": "Productivity Models",
+                "name": "Productivity Models (New)",
                 "description": "High-performance models for productivity and coding tasks",
                 "icon": "⚡",
                 "models": {
-                    "minimax-m2.5:cloud": {"name": "MiniMax M2.5", "desc": "State-of-the-art • Productivity & coding • Cloud only", "icon": "🌟"},
+                    "minimax-m2.5:cloud": {"name": "MiniMax M2.5 (New)", "desc": "State-of-the-art • Productivity & coding • Cloud only", "icon": "🌟"},
                 }
             },
             "minimax-legacy": {
@@ -602,7 +645,9 @@ MODEL_FAMILIES = {
                 "description": "Essential AI's models optimized for code and STEM",
                 "icon": "🧪",
                 "models": {
-                    "rnj-1:8b-cloud": {"name": "RNJ-1 8B Cloud", "desc": "8B parameters • Code & STEM optimized • Cloud only", "icon": "🌟"},
+                    "rnj-1:8b": {"name": "RNJ-1 8B", "desc": "8B parameters • Code & STEM optimized • 32K context", "icon": "🧠"},
+                    "rnj-1:latest": {"name": "RNJ-1 Latest", "desc": "8B parameters • Code & STEM optimized • 32K context", "icon": "⭐"},
+                    "rnj-1:8b-cloud": {"name": "RNJ-1 8B Cloud", "desc": "8B parameters • Code & STEM optimized • Cloud only", "icon": "☁️"},
                 }
             }
         }
