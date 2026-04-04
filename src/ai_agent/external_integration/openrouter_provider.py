@@ -47,48 +47,35 @@ class OpenRouterProvider:
         self.timeout = config.get("timeout", 120)
         self.logger = get_logger("openrouter_provider")
         
-        # Popular OpenRouter models (verified official names)
+        # Popular OpenRouter models (verified official names) - Top 5
         self.popular_models = [
             # OpenAI Models
             "openai/gpt-4o",
             "openai/gpt-4o-mini", 
-            "openai/gpt-4-turbo",
-            "openai/gpt-3.5-turbo",
             
             # Anthropic Models
             "anthropic/claude-3.5-sonnet",
-            "anthropic/claude-3.5-haiku",
-            "anthropic/claude-3-opus",
             
             # Google Models
             "google/gemini-2.0-flash-exp",
-            "google/gemini-1.5-pro",
-            "google/gemini-1.5-flash",
             
             # Meta Models
-            "meta-llama/llama-3.1-405b-instruct",
-            "meta-llama/llama-3.1-70b-instruct",
-            "meta-llama/llama-3.1-8b-instruct",
-            
-            # Mistral Models
-            "mistralai/mistral-large",
-            "mistralai/mixtral-8x7b",
-            "mistralai/mistral-7b-instruct",
-            
-            # DeepSeek Models
-            "deepseek/deepseek-r1",
-            "deepseek/deepseek-chat",
-            
-            # Groq Models
-            "groq/llama-3.1-405b-reasoning",
-            "groq/llama-3.1-70b-versatile",
-            
-            # Other Popular Models
-            "qwen/qwen-2.5-72b-instruct",
-            "cohere/command-r-plus",
-            "perplexity/llama-3.1-sonar-large-128k-online",
-            "nvidia/nemotron-4-340b-instruct"
+            "meta-llama/llama-3.1-70b-instruct"
         ]
+    
+    def _get_api_key(self) -> Optional[str]:
+        """Get API key from config or settings manager"""
+        if self.api_key:
+            return self.api_key
+        
+        # Try to get from settings manager
+        try:
+            from ..utils.settings_manager import get_settings_manager
+            settings = get_settings_manager()
+            self.api_key = settings.get_openrouter_api_key()
+            return self.api_key
+        except:
+            return None
         
     @property
     def name(self) -> str:
@@ -104,7 +91,8 @@ class OpenRouterProvider:
     
     def chat(self, prompt: str, model: Optional[str] = None, temperature: float = 1.0, max_tokens: int = 5000, system_instructions: Optional[str] = None, image_data: Optional[bytes] = None, image_format: str = "PNG") -> OpenRouterResponse:
         """Send a chat request to OpenRouter"""
-        if not self.api_key:
+        api_key = self._get_api_key()
+        if not api_key:
             return OpenRouterResponse(
                 success=False,
                 content="",
@@ -164,7 +152,7 @@ class OpenRouterProvider:
             # Make API call
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}",
+                "Authorization": f"Bearer {api_key}",
                 "HTTP-Referer": "https://github.com/AInohogosya/VEXIS-CLI-2",
                 "X-Title": "VEXIS-CLI-2 AI Agent"
             }
