@@ -16,7 +16,7 @@ api:
 
 # Security Configuration (All features DISABLED by default)
 security:
-  # NEW in v2.0: Command blocking settings
+  # NEW in v2.1: Command blocking settings
   # Set to true to enable safety features
   
   # Block dangerous commands (rm -rf /, fork bomb, etc.)
@@ -52,6 +52,9 @@ execution:
   # Retry settings
   max_iterations: 10         # max phase 2-4 loops
   auto_recovery: true        # auto-retry on failure
+  
+  # Phase 2 summarization
+  enable_phase2_summarization: true  # Enable summarization of Phase 2 input (Phase 4 output or Phase 1 output)
 
 # Logging Configuration
 logging:
@@ -60,14 +63,14 @@ logging:
   json_format: false         # structured JSON logging
   console: true              # output to console
   
-# Cache Configuration (NEW in v2.0)
+# Cache Configuration (NEW in v2.1)
 cache:
   enabled: true              # enable prompt caching
   max_size: 1000             # max cached entries
   ttl: 3600                  # cache TTL in seconds (1 hour)
   persist_to_disk: true      # save cache between sessions
 
-# Cost Management (NEW in v2.0)
+# Cost Management (NEW in v2.1)
 cost:
   # Budget limits (in USD)
   daily_budget: null         # e.g., 10.0 for $10/day
@@ -89,3 +92,14 @@ user:
   preferred_style: "detailed"  # concise, detailed, friendly
   auto_confirm: false
   show_progress: true
+
+# Telegram Configuration (NEW in v2.1)
+telegram:
+  enabled: false              # Enable Telegram bot mode
+  bot_token: ""               # Telegram bot token from @BotFather
+  allowed_user_ids: []        # List of allowed Telegram user IDs (empty = allow all)
+  max_history_length: 50      # Maximum number of conversation history entries to keep
+
+# Execution Mode Configuration (NEW in v2.1)
+execution:
+  mode: "auto"                # Execution mode: "auto" (ask on startup), "normal", or "telegram"

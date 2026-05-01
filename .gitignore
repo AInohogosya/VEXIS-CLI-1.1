@@ -170,6 +170,7 @@ miniconda3/
 !.envrc.example
 
 # Local configuration files
+config.yaml
 config.local.yaml
 config.local.yml
 config.local.json

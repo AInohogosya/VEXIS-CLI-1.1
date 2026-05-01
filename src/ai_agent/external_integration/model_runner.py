@@ -17,6 +17,7 @@ from ..utils.config import load_config
 class TaskType(Enum):
     """Task types for 5-Phase CLI Architecture"""
     PHASE1_COMMAND_SUGGESTION = "phase1_command_suggestion"
+    INPUT_SUMMARIZATION = "input_summarization"
     PHASE2_COMMAND_EXTRACTION = "phase2_command_extraction"
     PHASE4_LOG_EVALUATION = "phase4_log_evaluation"
     PHASE5_SUMMARY_GENERATION = "phase5_summary_generation"
@@ -60,13 +61,19 @@ class PromptTemplate:
     def _load_templates(self) -> Dict[str, str]:
         """Load prompt templates for 5-Phase CLI Architecture"""
         return {
-            TaskType.PHASE1_COMMAND_SUGGESTION.value: '''I have received the instruction: "{user_prompt}". What commands should I run to carry this out? Please tell me. I can only use terminal commands, so do not suggest GUI operations. The OS I am using is {os_info}.''',
+            TaskType.PHASE1_COMMAND_SUGGESTION.value: '''I have received the instruction: "{user_prompt}". What commands should I run to carry this out? Please tell me. I can only use terminal commands, so do not suggest GUI operations. The OS I am using is {os_info}.{conversation_history}''',
 
-            TaskType.PHASE2_COMMAND_EXTRACTION.value: '''Please look at this: {phase_1_output}. This is a relatively long text with many explanations, but please put all the necessary commands into a single code block. You may use only one code block.''',
+            TaskType.INPUT_SUMMARIZATION.value: '''Please summarize the following input into a single sentence. This is critical - you must provide exactly one sentence that captures the essence of the input. Do not use multiple sentences. Do not add explanations. Just provide the summary in a single sentence.
 
-            TaskType.PHASE4_LOG_EVALUATION.value: '''I executed the commands to carry out the instruction {user_prompt}. This resulted in the following log: {full_terminal_log_so_far} However, since I am a beginner, I do not know if it succeeded or failed. IMPORTANT: If the task failed, you MUST include the word "failure" somewhere in your response. If it succeeded, simply confirm success without using the word "failure".''',
+Input: {user_prompt}
 
-            TaskType.PHASE5_SUMMARY_GENERATION.value: '''I received the instruction {user_prompt} and have been executing commands like this to carry it out. {full_terminal_log} Now, I need to explain to the person who gave the instruction what I did, how I did it, and what the results were. Please summarize this information and output it inside a code block.''',
+Summary (one sentence only):''',
+
+            TaskType.PHASE2_COMMAND_EXTRACTION.value: '''Please look at this: {phase_1_output}. This is a relatively long text with many explanations, but please put all the necessary commands into a single code block. You may use only one code block.{conversation_history}''',
+
+            TaskType.PHASE4_LOG_EVALUATION.value: '''I executed the commands to carry out the instruction {user_prompt}. This resulted in the following log: {full_terminal_log_so_far} However, since I am a beginner, I do not know if it succeeded or failed. IMPORTANT: If the task failed, you MUST include the word "failure" somewhere in your response. If it succeeded, simply confirm success without using the word "failure".{conversation_history}''',
+
+            TaskType.PHASE5_SUMMARY_GENERATION.value: '''I received the instruction {user_prompt} and have been executing commands like this to carry it out. {full_terminal_log} Now, I need to explain to the person who gave the instruction what I did, how I did it, and what the results were. Please summarize this information and output it inside a code block.{conversation_history}''',
         }
 
     def get_template(self, task_type: TaskType) -> str:

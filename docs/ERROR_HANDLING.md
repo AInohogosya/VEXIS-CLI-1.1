@@ -791,4 +791,4 @@ def test_error_handler():
 3. **Progress Feedback**: Show what's being done
 4. **Recovery Options**: Provide clear next steps
 
-This comprehensive error handling system ensures that VEXIS-CLI-1.2 provides a robust, user-friendly experience even when things go wrong.
+This comprehensive error handling system ensures that VEXIS-CLI-2.2 provides a robust, user-friendly experience even when things go wrong.

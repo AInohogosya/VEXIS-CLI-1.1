@@ -808,6 +808,26 @@ class TerminalHistory:
         except Exception as e:
             self.logger.error(f"Error ending session: {e}")
     
+    def clear_session(self) -> None:
+        """Clear the current terminal session (reset terminal logs)"""
+        try:
+            # Clear all entries from the current session
+            self.terminal_session.entries = []
+            
+            # Reset session start time
+            self.terminal_session.start_time = time.time()
+            
+            # Reset working directory to home
+            self._current_directory = Path.home()
+            self.terminal_session.current_working_directory = str(self._current_directory)
+            
+            # Persist the cleared session
+            self._persist_history()
+            
+            self.logger.info(f"Terminal session cleared: {self.session_id}")
+        except Exception as e:
+            self.logger.error(f"Error clearing terminal session: {e}")
+    
     def load_session(self, session_id: str) -> bool:
         """
         Load a previous session for context
@@ -1116,8 +1136,8 @@ class TerminalHistory:
         from types import SimpleNamespace
         
         # Constants
-        OVERALL_TIMEOUT = 36000  # 10 hours
-        INACTIVITY_TIMEOUT = 600  # 10 minutes
+        OVERALL_TIMEOUT = 86400  # 24 hours
+        INACTIVITY_TIMEOUT = 86400  # 24 hours (disabled for background operation)
         
         # Join commands with newlines to execute sequentially in same shell
         processed_commands = []

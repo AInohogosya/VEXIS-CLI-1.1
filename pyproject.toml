@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vexis-cli"
-version = "2.0.0"
+version = "2.1.0"
 description = "AI command-line agent for terminal automation and task execution"
 readme = "README.md"
 license = "MIT"
@@ -36,6 +36,7 @@ dependencies = [
     "PyYAML>=6.0.0",
     "pluggy>=1.0.0",
     "ollama>=0.1.0",
+    "python-telegram-bot>=21.0.0",
     "pyautogui>=0.9.54; sys_platform=='darwin'",
     "pyobjc-framework-Cocoa>=9.0; sys_platform=='darwin'",
     "pywin32>=306; sys_platform=='win32'",

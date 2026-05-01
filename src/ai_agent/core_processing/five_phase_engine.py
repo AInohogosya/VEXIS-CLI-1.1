@@ -17,6 +17,7 @@ from enum import Enum
 from pathlib import Path
 
 from ..external_integration.model_runner import ModelRunner, TaskType, ModelRequest, ModelResponse
+from ..external_integration.telegram_bot import TelegramBotManager, ConversationHistory
 from ..utils.exceptions import ExecutionError, ValidationError
 from ..utils.logger import get_logger
 from .terminal_history import TerminalHistory, get_terminal_history, TerminalEntryType
@@ -38,6 +39,7 @@ class PipelineContext:
     """Context for tracking 5-phase pipeline execution"""
     user_prompt: str
     phase1_output: Optional[str] = None
+    input_summary: Optional[str] = None
     extracted_commands: Optional[str] = None
     terminal_log: str = ""
     phase4_output: Optional[str] = None
@@ -49,6 +51,9 @@ class PipelineContext:
     end_time: Optional[float] = None
     error: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
+    conversation_history: Optional[ConversationHistory] = None
+    telegram_mode: bool = False
+    telegram_user_id: Optional[int] = None
 
 
 class FivePhaseEngine:
@@ -63,7 +68,8 @@ class FivePhaseEngine:
     - Phase 5: Summary Generation
     """
     
-    def __init__(self, provider: str = None, model: str = None, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, provider: str = None, model: str = None, config: Optional[Dict[str, Any]] = None, 
+                 telegram_bot: Optional[TelegramBotManager] = None):
         self.config = config or {}
         self.logger = get_logger("five_phase_engine")
         
@@ -73,30 +79,43 @@ class FivePhaseEngine:
         # Initialize model runner with runtime provider and model
         self.model_runner = ModelRunner(provider=provider, model=model, config=self.config)
         
+        # Telegram bot manager
+        self.telegram_bot = telegram_bot
+        if self.telegram_bot and not hasattr(self.telegram_bot, 'terminal_history'):
+            self.telegram_bot.terminal_history = self.terminal_history
+        
         # Configuration
         self.max_iterations = self.config.get("max_iterations", 300)
         self.command_timeout = self.config.get("command_timeout", 30)
         self.task_timeout = self.config.get("task_timeout", 300)
+        self.enable_phase2_summarization = self.config.get("enable_phase2_summarization", True)
         
         self.logger.info("5-Phase Pipeline Engine initialized")
     
-    def execute_instruction(self, user_prompt: str) -> PipelineContext:
+    def execute_instruction(self, user_prompt: str, conversation_history: Optional[ConversationHistory] = None,
+                       telegram_mode: bool = False, telegram_user_id: Optional[int] = None) -> PipelineContext:
         """
         Execute user instruction through the 5-phase pipeline
         
         Args:
             user_prompt: Natural language instruction from user
+            conversation_history: Conversation history for Telegram mode
+            telegram_mode: Whether running in Telegram mode
+            telegram_user_id: Telegram user ID for sending messages
             
         Returns:
             PipelineContext with complete execution results
         """
-        self.logger.info("Starting 5-Phase Pipeline execution", user_prompt=user_prompt)
+        self.logger.info("Starting 5-Phase Pipeline execution", user_prompt=user_prompt, telegram_mode=telegram_mode)
         
         # Initialize context
         context = PipelineContext(
             user_prompt=user_prompt,
             max_iterations=self.max_iterations,
-            metadata={"os_info": self._get_os_info()}
+            metadata={"os_info": self._get_os_info()},
+            conversation_history=conversation_history,
+            telegram_mode=telegram_mode,
+            telegram_user_id=telegram_user_id
         )
         
         try:
@@ -104,6 +123,18 @@ class FivePhaseEngine:
             if not self._run_phase1(context):
                 context.current_phase = PipelinePhase.FAILED
                 context.error = "Phase 1 (Command Suggestion) failed"
+                
+                # Send error notification via Telegram
+                if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                    try:
+                        self._send_telegram_message_sync(
+                            context.telegram_user_id,
+                            f"❌ **Phase 1 Failed**\n\nCommand Suggestion phase failed. The AI could not generate appropriate commands for your request.\n\nError: {context.error}"
+                        )
+                        self.logger.info("Sent Phase 1 failure notification to Telegram")
+                    except Exception as telegram_error:
+                        self.logger.warning(f"Failed to send Phase 1 failure notification to Telegram: {telegram_error}")
+                
                 return context
             
             # Phase 2-4 Loop: Extract, Execute, Evaluate until complete
@@ -116,12 +147,36 @@ class FivePhaseEngine:
                 if not self._run_phase2(context):
                     context.current_phase = PipelinePhase.FAILED
                     context.error = "Phase 2 (Command Extraction) failed"
+                    
+                    # Send error notification via Telegram
+                    if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                        try:
+                            self._send_telegram_message_sync(
+                                context.telegram_user_id,
+                                f"❌ **Phase 2 Failed**\n\nCommand Extraction phase failed. The AI could not extract valid commands from the suggestion.\n\nError: {context.error}"
+                            )
+                            self.logger.info("Sent Phase 2 failure notification to Telegram")
+                        except Exception as telegram_error:
+                            self.logger.warning(f"Failed to send Phase 2 failure notification to Telegram: {telegram_error}")
+                    
                     return context
                 
                 # Phase 3: Command Execution
                 if not self._run_phase3(context):
                     context.current_phase = PipelinePhase.FAILED
                     context.error = "Phase 3 (Command Execution) failed"
+                    
+                    # Send error notification via Telegram
+                    if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                        try:
+                            self._send_telegram_message_sync(
+                                context.telegram_user_id,
+                                f"❌ **Phase 3 Failed**\n\nCommand Execution phase failed. The commands could not be executed successfully.\n\nError: {context.error}"
+                            )
+                            self.logger.info("Sent Phase 3 failure notification to Telegram")
+                        except Exception as telegram_error:
+                            self.logger.warning(f"Failed to send Phase 3 failure notification to Telegram: {telegram_error}")
+                    
                     return context
                 
                 # Phase 4: Log Evaluation
@@ -141,6 +196,18 @@ class FivePhaseEngine:
             if not self._run_phase5(context):
                 context.current_phase = PipelinePhase.FAILED
                 context.error = "Phase 5 (Summary Generation) failed"
+                
+                # Send error notification via Telegram
+                if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                    try:
+                        self._send_telegram_message_sync(
+                            context.telegram_user_id,
+                            f"❌ **Phase 5 Failed**\n\nSummary Generation phase failed. The task completed but a summary could not be generated.\n\nError: {context.error}"
+                        )
+                        self.logger.info("Sent Phase 5 failure notification to Telegram")
+                    except Exception as telegram_error:
+                        self.logger.warning(f"Failed to send Phase 5 failure notification to Telegram: {telegram_error}")
+                
                 return context
             
             context.current_phase = PipelinePhase.COMPLETED
@@ -157,6 +224,18 @@ class FivePhaseEngine:
             context.current_phase = PipelinePhase.FAILED
             context.error = str(e)
             context.end_time = time.time()
+            
+            # Send error notification via Telegram
+            if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                try:
+                    self._send_telegram_message_sync(
+                        context.telegram_user_id,
+                        f"❌ **Error Occurred**\n\n{str(e)}\n\nThe task could not be completed due to an error. Please check the execution log for more details."
+                    )
+                    self.logger.info("Sent error notification to Telegram")
+                except Exception as telegram_error:
+                    self.logger.warning(f"Failed to send error notification to Telegram: {telegram_error}")
+            
             return context
     
     def _run_phase1(self, context: PipelineContext) -> bool:
@@ -175,6 +254,12 @@ class FivePhaseEngine:
         try:
             os_info = context.metadata.get("os_info", self._get_os_info())
             
+            # Add conversation history to context if available (Telegram or Normal mode)
+            conversation_history_text = ""
+            if context.conversation_history:
+                conversation_history_text = "\n\n" + context.conversation_history.format_for_prompt()
+                self.logger.info("Including conversation history in Phase 1 prompt")
+            
             # Create request for Phase 1
             request = ModelRequest(
                 task_type=TaskType.PHASE1_COMMAND_SUGGESTION,
@@ -182,6 +267,7 @@ class FivePhaseEngine:
                 context={
                     "user_prompt": context.user_prompt,
                     "os_info": os_info,
+                    "conversation_history": conversation_history_text,
                 },
                 max_tokens=4000,
                 temperature=0.7
@@ -208,7 +294,8 @@ class FivePhaseEngine:
         """
         Phase 2: Command Extraction
         
-        Send Phase 1 output to base model to compress all necessary commands
+        First, summarize the input into a single sentence (if enabled).
+        Then, send Phase 1 output to base model to compress all necessary commands
         into a single code block.
         
         If no code block found, re-run Phase 2 (up to 3 retries).
@@ -223,6 +310,12 @@ class FivePhaseEngine:
         # On first iteration, use Phase 1 output
         # On subsequent iterations, use Phase 4 output
         phase_input = context.phase4_output if context.phase4_output else context.phase1_output
+        
+        # Step 1: Summarize input into a single sentence (if enabled)
+        # Summarize the Phase 2 input (Phase 4 output or Phase 1 output), not the user prompt
+        if self.enable_phase2_summarization:
+            if not self._summarize_input(context, phase_input):
+                self.logger.warning("Input summarization failed, continuing with Phase 2")
         
         max_retries = 3
         for attempt in range(max_retries):
@@ -254,6 +347,18 @@ class FivePhaseEngine:
                     context.extracted_commands = commands
                     self.logger.info("Phase 2 completed successfully",
                                    commands_length=len(commands))
+                    
+                    # Send extracted commands via Telegram immediately (non-blocking)
+                    if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                        try:
+                            self._send_telegram_message_sync(
+                                context.telegram_user_id,
+                                f"🔧 Commands extracted:\n```\n{commands}\n```"
+                            )
+                        except Exception as e:
+                            # Log error but don't fail Phase 2
+                            self.logger.warning(f"Failed to send extracted commands to Telegram: {e}")
+                    
                     return True
                 else:
                     self.logger.warning(f"Phase 2: No code block found in attempt {attempt + 1}")
@@ -268,6 +373,61 @@ class FivePhaseEngine:
                 return False
         
         return False
+    
+    def _summarize_input(self, context: PipelineContext, input_to_summarize: str) -> bool:
+        """
+        Summarize the input into a single sentence.
+        This step is common to all modes (Normal and Telegram).
+        
+        Args:
+            context: Pipeline context
+            input_to_summarize: The input to summarize (Phase 4 output or Phase 1 output)
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        self.logger.info("Summarizing input into a single sentence")
+        
+        try:
+            request = ModelRequest(
+                task_type=TaskType.INPUT_SUMMARIZATION,
+                prompt=input_to_summarize,
+                context={
+                    "input_to_summarize": input_to_summarize,
+                },
+                max_tokens=200,
+                temperature=0.3
+            )
+            
+            response = self.model_runner.run_model(request)
+            
+            if not response.success:
+                self.logger.error(f"Input summarization failed: {response.error}")
+                return False
+            
+            context.input_summary = response.content.strip()
+            self.logger.info(f"Input summary: {context.input_summary}")
+            
+            # Output or send summary based on mode
+            if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                # Send via Telegram immediately (non-blocking)
+                try:
+                    self._send_telegram_message_sync(
+                        context.telegram_user_id,
+                        f"📝 Summary: {context.input_summary}"
+                    )
+                except Exception as e:
+                    # Log error but don't fail summarization
+                    self.logger.warning(f"Failed to send input summary to Telegram: {e}")
+            else:
+                # Output to terminal log
+                print(f"\n📝 Input Summary: {context.input_summary}")
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Input summarization failed: {e}")
+            return False
     
     def _run_phase3(self, context: PipelineContext) -> bool:
         """
@@ -308,6 +468,18 @@ class FivePhaseEngine:
                 self.logger.info("Phase 3: Batch execution succeeded")
             else:
                 self.logger.warning(f"Phase 3: Batch execution failed: {result.get('stderr', 'Unknown')}")
+                
+                # Check for timeout and notify via Telegram
+                stderr = result.get('stderr', '')
+                if 'timed out' in stderr.lower() and context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                    try:
+                        self._send_telegram_message_sync(
+                            context.telegram_user_id,
+                            f"⏱️ **Timeout Error**\n\nCommand execution timed out after {self.command_timeout} seconds.\n\nThe task took too long to complete and was terminated."
+                        )
+                        self.logger.info("Sent timeout notification to Telegram")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to send timeout notification to Telegram: {e}")
             
             # Update terminal log in context
             context.terminal_log = self.terminal_history.display_terminal_log(max_entries=1000)
@@ -336,6 +508,12 @@ class FivePhaseEngine:
             # Get full terminal log
             full_terminal_log = self.terminal_history.display_terminal_log(max_entries=1000)
             
+            # Add conversation history to context if available (Telegram or Normal mode)
+            conversation_history_text = ""
+            if context.conversation_history:
+                conversation_history_text = "\n\n" + context.conversation_history.format_for_prompt()
+                self.logger.info("Including conversation history in Phase 4 prompt")
+            
             # Create request for Phase 4
             request = ModelRequest(
                 task_type=TaskType.PHASE4_LOG_EVALUATION,
@@ -343,6 +521,7 @@ class FivePhaseEngine:
                 context={
                     "user_prompt": context.user_prompt,
                     "full_terminal_log_so_far": full_terminal_log,
+                    "conversation_history": conversation_history_text,
                 },
                 max_tokens=4000,
                 temperature=0.5
@@ -379,6 +558,7 @@ class FivePhaseEngine:
         Phase 5: Summary Generation and Display
         
         Generate human-readable summary of what was done and the result.
+        In Telegram mode, send via Telegram. In normal mode, display in terminal.
         
         Returns:
             True if successful, False otherwise
@@ -392,6 +572,12 @@ class FivePhaseEngine:
                 # Get full terminal log
                 full_terminal_log = self.terminal_history.display_terminal_log(max_entries=1000)
                 
+                # Add conversation history to context if available (Telegram or Normal mode)
+                conversation_history_text = ""
+                if context.conversation_history:
+                    conversation_history_text = "\n\n" + context.conversation_history.format_for_prompt()
+                    self.logger.info("Including conversation history in Phase 5 prompt")
+                
                 # Create request for Phase 5
                 request = ModelRequest(
                     task_type=TaskType.PHASE5_SUMMARY_GENERATION,
@@ -399,6 +585,7 @@ class FivePhaseEngine:
                     context={
                         "user_prompt": context.user_prompt,
                         "full_terminal_log": full_terminal_log,
+                        "conversation_history": conversation_history_text,
                     },
                     max_tokens=4000,
                     temperature=0.7
@@ -421,9 +608,17 @@ class FivePhaseEngine:
                     self.logger.info("Phase 5 completed successfully",
                                    summary_length=len(summary))
                     
-                    # Display the summary
-                    print("")
-                    print(context.final_summary)
+                    # Send or display the summary based on mode
+                    if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
+                        # Send via Telegram immediately
+                        self._send_telegram_message_sync(
+                            context.telegram_user_id,
+                            f"✅ Task Completed\n\n{context.final_summary}"
+                        )
+                    else:
+                        # Display the summary in terminal
+                        print("")
+                        print(context.final_summary)
                     
                     return True
                 else:
@@ -439,6 +634,23 @@ class FivePhaseEngine:
                 return False
         
         return False
+    
+    def _send_telegram_message_sync(self, user_id: int, message: str):
+        """
+        Send a Telegram message synchronously using the message queue.
+        
+        This method queues the message to be sent from the Telegram bot's async event loop.
+        This avoids the complexity of cross-thread event loop coordination.
+        
+        Args:
+            user_id: Telegram user ID to send message to
+            message: Message content to send
+        """
+        self.logger.info(f"Queueing Telegram message to user {user_id}")
+        
+        # Queue the message to be sent from the async event loop
+        self.telegram_bot.queue_message(user_id, message)
+        self.logger.info(f"Message queued successfully for user {user_id}")
     
     def _extract_code_block(self, text: str) -> Optional[str]:
         """

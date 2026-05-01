@@ -110,7 +110,7 @@ tox>=4.0.0
 ## Project Structure
 
 ```
-VEXIS-CLI-1.2/
+VEXIS-CLI-2.1/
 ├── src/
 │   └── ai_agent/
 │       ├── core_processing/          # Core logic
@@ -1092,4 +1092,4 @@ def debug_config():
         traceback.print_exc()
 ```
 
-This development guide provides comprehensive information for contributing to VEXIS-CLI-1.2, from initial setup to advanced debugging and optimization techniques.
+This development guide provides comprehensive information for contributing to VEXIS-CLI-2.2, from initial setup to advanced debugging and optimization techniques.

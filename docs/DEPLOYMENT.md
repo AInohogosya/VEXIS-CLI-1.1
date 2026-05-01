@@ -1453,4 +1453,4 @@ restore_backup "$1"
 echo "Recovery completed successfully"
 ```
 
-This comprehensive deployment guide provides everything needed to deploy VEXIS-CLI-1.2 in various environments, from development setups to production-scale deployments with proper monitoring, security, and backup strategies.
+This comprehensive deployment guide provides everything needed to deploy VEXIS-CLI-2.2 in various environments, from development setups to production-scale deployments with proper monitoring, security, and backup strategies.

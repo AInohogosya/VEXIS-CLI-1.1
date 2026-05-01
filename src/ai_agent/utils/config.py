@@ -41,6 +41,8 @@ class APIConfig:
     local_endpoint: str = "http://localhost:11434"
     local_model: str = field(default_factory=lambda: _get_ollama_model_from_settings())
     
+    # OpenRouter configuration
+    openrouter_api_key: str = ""
     
     # General settings
     timeout: int = 30
@@ -95,6 +97,21 @@ class EngineConfig:
 
 
 @dataclass
+class TelegramConfig:
+    """Telegram bot configuration"""
+    enabled: bool = False
+    bot_token: str = ""
+    allowed_user_ids: list = field(default_factory=list)
+    max_history_length: int = 50
+
+
+@dataclass
+class ExecutionConfig:
+    """Execution mode configuration"""
+    mode: str = "auto"  # "auto", "normal", or "telegram"
+
+
+@dataclass
 class Config:
     """Main configuration class"""
     logging: LoggingConfig = field(default_factory=LoggingConfig)
@@ -102,6 +119,8 @@ class Config:
     security: SecurityConfig = field(default_factory=SecurityConfig)
     performance: PerformanceConfig = field(default_factory=PerformanceConfig)
     engine: EngineConfig = field(default_factory=EngineConfig)
+    telegram: TelegramConfig = field(default_factory=TelegramConfig)
+    execution: ExecutionConfig = field(default_factory=ExecutionConfig)
     
     # Platform-specific settings
     platform: Dict[str, Any] = field(default_factory=dict)
@@ -237,6 +256,8 @@ class ConfigManager:
                 security=SecurityConfig(**self._raw_config.get("security", {})),
                 performance=PerformanceConfig(**self._raw_config.get("performance", {})),
                 engine=EngineConfig(**self._raw_config.get("engine", {})),
+                telegram=TelegramConfig(**self._raw_config.get("telegram", {})),
+                execution=ExecutionConfig(**self._raw_config.get("execution", {})),
                 platform=self._raw_config.get("platform", {}),
                 custom=self._raw_config.get("custom", {}),
             )

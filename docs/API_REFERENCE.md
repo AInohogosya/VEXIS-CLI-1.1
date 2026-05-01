@@ -785,7 +785,7 @@ def mock_ollama_response():
 
 ### Version Compatibility
 
-This API reference covers VEXIS-CLI version 2.0.0.
+This API reference covers VEXIS-CLI version 2.1.0.
 
 #### Breaking Changes from 0.x
 
@@ -823,4 +823,4 @@ This API reference covers VEXIS-CLI version 2.0.0.
    config = load_config("config.yaml")
    ```
 
-This API reference provides comprehensive documentation for all public interfaces in VEXIS-CLI-1.2, enabling developers to integrate, extend, and test the system effectively.
+This API reference provides comprehensive documentation for all public interfaces in VEXIS-CLI-2.2, enabling developers to integrate, extend, and test the system effectively.

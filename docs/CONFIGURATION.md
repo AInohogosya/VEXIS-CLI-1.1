@@ -31,7 +31,7 @@ VEXIS-CLI uses a flexible configuration system that supports 16+ AI providers, c
 
 ```yaml
 # VEXIS-CLI Configuration File
-# Version: 2.0.0
+# Version: 2.1.0
 
 # AI Provider Configuration
 api:
@@ -94,7 +94,7 @@ logging:
 
 # Security Configuration
 security:
-  # Command Blocking Settings (NEW in v2.0)
+  # Command Blocking Settings (NEW in v2.1)
   # All settings are DISABLED by default for user freedom
   # Enable these to add safety checks
   
@@ -364,7 +364,7 @@ logging:
 
 ### Security Configuration
 
-#### Command Blocking (New in v2.0)
+#### Command Blocking (New in v2.1)
 
 VEXIS-CLI now offers configurable command blocking. All safety features are **disabled by default** to give users full control.
 

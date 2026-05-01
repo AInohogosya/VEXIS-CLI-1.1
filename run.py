@@ -648,7 +648,7 @@ def format_model_display_name(provider: str, model: str) -> str:
     """Format model names for better display"""
     model_display_map = {
         "google": {
-            "gemini-2.0-flash-exp": "Gemini 2.0 Flash",
+            "gemini-2.5-flash": "Gemini 2.5 Flash",
             "gemini-3-flash-preview": "Gemini 3 Flash",
             "gemini-1.5-pro": "Gemini 1.5 Pro",
             "gemini-1.5-flash": "Gemini 1.5 Flash"
@@ -911,6 +911,37 @@ def configure_ollama_provider():
     
     return "ollama"
 
+def select_execution_mode():
+    """Select execution mode (Normal or Telegram) using curses arrow keys"""
+    from ai_agent.utils.curses_menu import get_curses_menu
+    
+    # Use curses-based menu with arrow keys
+    menu = get_curses_menu(
+        "🎯 Select Execution Mode",
+        "Choose how you want to interact with the AI agent:"
+    )
+    
+    menu.add_item(
+        "Normal Mode",
+        "Run commands directly in terminal • Standard interface",
+        "normal",
+        "💻"
+    )
+    
+    menu.add_item(
+        "Telegram Mode",
+        "Control via Telegram bot • Remote access from smartphone",
+        "telegram",
+        "📱"
+    )
+    
+    selected_mode = menu.show()
+    
+    if selected_mode is None:
+        return None
+    
+    return selected_mode
+
 def select_model_provider():
     """Main configuration screen for model provider selection using curses arrow keys"""
     from ai_agent.utils.settings_manager import get_settings_manager
@@ -1125,7 +1156,7 @@ def configure_generic_provider(provider_name):
             "openai/gpt-4o",
             "openai/gpt-4o-mini",
             "anthropic/claude-3.5-sonnet",
-            "google/gemini-2.0-flash-exp",
+            "google/gemini-2.5-flash",
             "meta-llama/llama-3.1-70b-instruct",
             "Other Models"
         ],
@@ -1219,7 +1250,7 @@ def get_custom_model_name() -> Optional[str]:
     print(f"  • openai/gpt-4o")
     print(f"  • anthropic/claude-3.5-sonnet") 
     print(f"  • meta-llama/llama-3.1-70b-instruct")
-    print(f"  • google/gemini-2.0-flash-exp")
+    print(f"  • google/gemini-2.5-flash")
     print(f"  • deepseek/deepseek-r1")
     print(f"  • openrouter/auto (automatic model selection)")
     print(f"{Colors.YELLOW}Visit https://openrouter.ai/models for all available models{Colors.RESET}")
@@ -1756,17 +1787,7 @@ def main():
     src_dir = current_dir / "src"
     sys.path.insert(0, str(src_dir))
     
-    # Validate arguments
-    if len(sys.argv) < 2 and not any(flag in sys.argv for flag in ["--install-sdks", "--sdk-status", "--help"]):
-        print("Usage: python3 run.py \"your instruction here\"")
-        print("Example: python3 run.py \"Take a screenshot\"")
-        print("\nOptions:")
-        print("  --install-sdks    Install missing AI provider SDKs")
-        print("  --sdk-status      Show AI provider SDK installation status")
-        print("  --debug           Enable debug mode")
-        print("  --no-prompt       Use saved provider preference without prompting")
-        print("  --help            Show this help message")
-        sys.exit(1)
+    # Validate arguments - allow running without instruction for interactive/Telegram modes
     
     # Show help
     if "--help" in sys.argv:
@@ -1792,15 +1813,13 @@ def main():
     
     # Filter out flags to get the actual instruction
     instruction_args = [arg for arg in sys.argv[1:] if not arg.startswith("--")]
-    instruction = " ".join(instruction_args)
+    instruction = " ".join(instruction_args) if instruction_args else None
     
     # Allow SDK management commands without instruction
     sdk_only_commands = ["--install-sdks", "--sdk-status"]
-    if not instruction and not any(flag in sys.argv for flag in sdk_only_commands + ["--help"]):
-        print("No instruction provided")
-        print("Usage: python3 run.py \"your instruction here\"")
-        print("Use --help for more options")
-        sys.exit(1)
+    if any(flag in sys.argv for flag in sdk_only_commands):
+        # SDK management commands don't need instruction
+        pass
     
     # Check for debug mode
     debug_mode = "--debug" in sys.argv
@@ -1831,6 +1850,41 @@ def main():
             print(f"❌ Failed to check SDK status: {e}")
         sys.exit(0)
     
+    # Mode selection - check config.yaml first, then prompt if needed
+    selected_mode = None
+    
+    # Try to get mode from config.yaml
+    try:
+        from ai_agent.utils.config import ConfigManager
+        config_path = current_dir / "config.yaml"
+        # Create a new config manager with the specific path to avoid singleton cache
+        config_manager = ConfigManager(str(config_path)) if config_path.exists() else None
+        if config_manager:
+            config = config_manager.load_config()
+            if hasattr(config, 'execution') and hasattr(config.execution, 'mode'):
+                config_mode = config.execution.mode
+                if config_mode in ["normal", "telegram"]:
+                    selected_mode = config_mode
+                    print(f"\nUsing configured mode from config.yaml: {selected_mode.upper()}")
+                elif config_mode != "auto":
+                    print(f"⚠️ Invalid mode in config.yaml: {config_mode}. Using auto mode.")
+    except Exception as e:
+        print(f"⚠️ Could not load config for mode selection: {e}")
+    
+    # If mode not set in config or set to "auto", prompt user (unless --no-prompt)
+    if selected_mode is None:
+        if "--no-prompt" not in sys.argv:
+            result = select_execution_mode()
+            if result is None:
+                print("Mode selection cancelled")
+                sys.exit(1)
+            selected_mode = result
+            print(f"\nSelected mode: {selected_mode.upper()}")
+        else:
+            # Default to normal mode when --no-prompt is used and no config
+            selected_mode = "normal"
+            print(f"\nUsing default mode: NORMAL")
+    
     # Model selection - only prompt if not using --no-prompt flag
     selected_provider = None
     selected_model = None
@@ -1845,15 +1899,76 @@ def main():
         if selected_model:
             print(f"Using model: {selected_model}")
     else:
-        from ai_agent.utils.settings_manager import get_settings_manager
-        settings_manager = get_settings_manager()
-        selected_provider = settings_manager.get_preferred_provider()
-        selected_model = settings_manager.get_model(selected_provider) if selected_provider else None
-        print(f"\nUsing saved provider preference: {selected_provider}")
-        if selected_model:
-            print(f"Using saved model: {selected_model}")
+        # Try to get provider from config.yaml first
+        try:
+            from ai_agent.utils.config import ConfigManager
+            config_path = current_dir / "config.yaml"
+            config_manager = ConfigManager(str(config_path)) if config_path.exists() else None
+            if config_manager:
+                config = config_manager.load_config()
+                if hasattr(config, 'api') and hasattr(config.api, 'preferred_provider'):
+                    selected_provider = config.api.preferred_provider
+                    if selected_provider:
+                        # Get model from config
+                        if selected_provider == "ollama" and hasattr(config.api, 'local_model'):
+                            selected_model = config.api.local_model
+                        elif hasattr(config.api, 'local_model'):
+                            # Use local_model as default for any provider
+                            selected_model = config.api.local_model
+                        else:
+                            # Default model for OpenRouter if not specified
+                            if selected_provider == "openrouter":
+                                selected_model = "openai/gpt-4o"
+                            else:
+                                selected_model = None
+                        print(f"\nUsing provider from config.yaml: {selected_provider}")
+                        if selected_model:
+                            print(f"Using model from config.yaml: {selected_model}")
+        except Exception as e:
+            print(f"⚠️ Could not load config for provider selection: {e}")
+        
+        # Fallback to saved preferences if config didn't provide provider or model
+        if not selected_provider or not selected_model:
+            from ai_agent.utils.settings_manager import get_settings_manager
+            settings_manager = get_settings_manager()
+            if not selected_provider:
+                selected_provider = settings_manager.get_preferred_provider()
+            if not selected_model:
+                selected_model = settings_manager.get_model(selected_provider) if selected_provider else None
+            print(f"\nUsing saved provider preference: {selected_provider}")
+            if selected_model:
+                print(f"Using saved model: {selected_model}")
     
-    print(f"\nAI Agent executing: {instruction}")
+    # Handle instruction based on mode
+    if selected_mode == "telegram":
+        # Telegram mode: instruction is not needed (comes from Telegram messages)
+        print(f"\nAI Agent starting in Telegram mode...")
+        print("Waiting for messages from Telegram bot...")
+        instruction = "Telegram bot mode"  # Placeholder, actual instructions come from Telegram
+    elif not instruction:
+        # Normal mode without instruction: prompt for input interactively
+        print("\n" + "=" * 50)
+        print("VEXIS-CLI - AI-Powered Command Line Assistant")
+        print("=" * 50)
+        print("\nInteractive Mode - Context is maintained between commands")
+        print("Commands:")
+        print("  Enter your instruction to execute")
+        print("  Type 'quit', 'exit', or 'q' to exit")
+        print("  Type '/reset' to clear conversation history")
+        print("\nEnter your instruction:")
+        try:
+            instruction = input("> ")
+            if instruction.lower() in ['quit', 'exit', 'q']:
+                print("Exiting...")
+                sys.exit(0)
+            if not instruction.strip():
+                print("No instruction provided. Exiting...")
+                sys.exit(0)
+        except (EOFError, KeyboardInterrupt):
+            print("\nExiting...")
+            sys.exit(0)
+    else:
+        print(f"\nAI Agent executing: {instruction}")
     
     max_iterations = 10
     
@@ -1868,13 +1983,29 @@ def main():
     
     try:
         from ai_agent.user_interface.five_phase_app import FivePhaseAIAgent
+        from ai_agent.external_integration.telegram_bot import create_telegram_bot
+        
+        # Create Telegram bot if in Telegram mode
+        telegram_bot = None
+        if selected_mode == "telegram":
+            config_path = current_dir / "config.yaml"
+            telegram_bot = create_telegram_bot(str(config_path) if config_path.exists() else None)
+            
+            if not telegram_bot:
+                print("⚠️ Telegram mode selected but bot configuration is invalid")
+                print("Please check config.yaml for telegram settings")
+                print("Falling back to Normal mode")
+                selected_mode = "normal"
+            else:
+                print("✓ Telegram bot initialized")
         
         # Create agent with selected provider and model
         config_path = current_dir / "config.yaml"
         agent = FivePhaseAIAgent(
             provider=selected_provider,
             model=selected_model,
-            config_path=str(config_path) if config_path.exists() else None
+            config_path=str(config_path) if config_path.exists() else None,
+            telegram_bot=telegram_bot
         )
         
         # Run the instruction with 5-phase options
@@ -1882,15 +2013,112 @@ def main():
             "debug": debug_mode,
             "max_iterations": max_iterations,
             "command_timeout": 30,
-            "task_timeout": 300
+            "task_timeout": 300,
+            "telegram_mode": selected_mode == "telegram"
         }
-        result = agent.run(instruction, options)
         
-        if result == 0:
-            print("\n✓ Task completed successfully")
+        # If in Telegram mode, start the bot and handle messages
+        if selected_mode == "telegram" and telegram_bot:
+            print("\n📱 Starting Telegram bot mode...")
+            print("Send commands to your bot to control the AI agent.")
+            print("Press Ctrl+C to stop the bot.")
+            
+            # Set the message callback
+            def process_telegram_message(message: str, user_id: int) -> str:
+                """Process message from Telegram and return response"""
+                # Get conversation history for this user
+                conversation_history = telegram_bot.get_conversation_history(user_id)
+                
+                # Execute instruction with Telegram mode
+                context = agent.engine.execute_instruction(
+                    user_prompt=message,
+                    conversation_history=conversation_history,
+                    telegram_mode=True,
+                    telegram_user_id=user_id
+                )
+                
+                # Return the final summary as response
+                if context.final_summary:
+                    return context.final_summary
+                elif context.error:
+                    return f"Error: {context.error}"
+                else:
+                    return "Task completed (no summary available)"
+            
+            telegram_bot.set_message_callback(process_telegram_message)
+            
+            # Start the bot (blocking)
+            try:
+                telegram_bot.start_bot()
+            except KeyboardInterrupt:
+                print("\n\nStopping Telegram bot...")
+                telegram_bot.stop_bot()
+                print("Bot stopped.")
+                sys.exit(0)
         else:
-            print("\n✗ Task failed")
-            sys.exit(1)
+            # Normal mode execution with interactive loop
+            from ai_agent.external_integration.telegram_bot import ConversationHistory
+            
+            # Create conversation history for normal mode (use user_id=0 for single user)
+            conversation_history = ConversationHistory(user_id=0, max_length=50)
+            
+            # Interactive loop
+            while True:
+                # Check for /reset command
+                if instruction.strip() == "/reset":
+                    # Clear conversation history
+                    conversation_history.clear()
+                    
+                    # Clear terminal history
+                    if agent.engine and hasattr(agent.engine, 'terminal_history'):
+                        agent.engine.terminal_history.clear_session()
+                        print("✅ Terminal logs cleared.")
+                    
+                    print("✅ Conversation history and terminal logs cleared.")
+                    print("\nEnter your instruction (or 'quit' to exit, '/reset' to clear context):")
+                    try:
+                        instruction = input("> ")
+                        if instruction.lower() in ['quit', 'exit', 'q']:
+                            print("Exiting...")
+                            sys.exit(0)
+                        if not instruction.strip():
+                            print("No instruction provided. Exiting...")
+                            sys.exit(0)
+                        continue
+                    except (EOFError, KeyboardInterrupt):
+                        print("\nExiting...")
+                        sys.exit(0)
+                
+                # Add user message to conversation history
+                conversation_history.add_message("user", instruction)
+                
+                # Execute instruction with conversation history
+                result = agent.run(instruction, options, conversation_history=conversation_history)
+                
+                if result == 0:
+                    print("\n✓ Task completed successfully")
+                else:
+                    print("\n✗ Task failed")
+                
+                # Add the final summary to conversation history
+                if agent.engine and hasattr(agent.engine, 'terminal_history'):
+                    last_output = agent.engine.terminal_history.get_last_command_output()
+                    if last_output:
+                        conversation_history.add_message("assistant", last_output)
+                
+                # Prompt for next instruction
+                print("\nEnter your instruction (or 'quit' to exit, '/reset' to clear context):")
+                try:
+                    instruction = input("> ")
+                    if instruction.lower() in ['quit', 'exit', 'q']:
+                        print("Exiting...")
+                        sys.exit(0)
+                    if not instruction.strip():
+                        print("No instruction provided. Exiting...")
+                        sys.exit(0)
+                except (EOFError, KeyboardInterrupt):
+                    print("\nExiting...")
+                    sys.exit(0)
             
     except ImportError as e:
         print(f"Import error: {e}")

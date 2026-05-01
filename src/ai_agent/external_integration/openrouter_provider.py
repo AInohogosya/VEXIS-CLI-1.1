@@ -57,7 +57,7 @@ class OpenRouterProvider:
             "anthropic/claude-3.5-sonnet",
             
             # Google Models
-            "google/gemini-2.0-flash-exp",
+            "google/gemini-2.0-flash-thinking-exp:1212",
             
             # Meta Models
             "meta-llama/llama-3.1-70b-instruct"
@@ -236,7 +236,7 @@ class OpenRouterProvider:
                 "anthropic/claude-3-opus": 15.0,
                 
                 # Google models
-                "google/gemini-2.0-flash-exp": 0.5,
+                "google/gemini-2.0-flash-thinking-exp:1212": 0.5,
                 "google/gemini-1.5-pro": 3.5,
                 "google/gemini-1.5-flash": 0.2,
                 

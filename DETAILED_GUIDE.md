@@ -59,7 +59,7 @@ python3 run.py "your instruction here"
 
 ### System Requirements
 
-- **Python**: 3.9 or higher
+- **Python**: 3.8 or higher
 - **Memory**: 4GB+ RAM recommended
 - **Storage**: 2GB+ free space
 - **Network**: Internet connection for cloud providers
@@ -243,9 +243,9 @@ Similar setup process for:
 
 ## Advanced Features
 
-### Two-Phase Execution Engine
+### Five-Phase Execution Engine
 
-VEXIS-CLI uses a sophisticated two-phase execution:
+VEXIS-CLI uses a sophisticated five-phase execution:
 
 1. **Command Planning Phase**:
    - Natural language understanding
@@ -400,6 +400,6 @@ python3 run.py "your command" --debug
 
 ---
 
-**Version**: 2.0.0  
-**Last Updated**: 2026-04-01  
-**Compatibility**: Python 3.9+
+**Version**: 2.1.0  
+**Last Updated**: 2026-05-01  
+**Compatibility**: Python 3.8+

@@ -204,8 +204,8 @@ logging:
 ```
 
 ### 🎯 **2026 Model Recommendations**
-- **🏠 Local**: `llama4-scout-17b` (balanced), `deepseek-r1` (reasoning), `qwen2.5:7b` (speed)
-- **☁️ Cloud**: `gpt-5.4-pro` (professional), `gemini-3.1-pro` (enterprise), `claude-opus-4.6` (analytical)
+- **🏠 Local**: `llama-4-scout-17b` (balanced), `deepseek-r1` (reasoning), `qwen2.5:7b` (speed)
+- **☁️ Cloud**: `GPT-5.4-pro` (professional), `gemini-3.1-pro` (enterprise), `claude-opus-4.6` (analytical)
 
 ---
 

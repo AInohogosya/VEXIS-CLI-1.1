@@ -39,8 +39,8 @@ This directory contains comprehensive technical documentation for VEXIS-CLI, inc
 
 ### For Operators
 1. Review [Deployment](./DEPLOYMENT.md) for deployment options
-2. Set up [Monitoring](./MONITORING.md) for observability
-3. Optimize with [Performance](./PERFORMANCE.md)
+2. Set up monitoring using the deployment guide
+3. Optimize performance using configuration options
 
 ## Document Conventions
 
@@ -52,9 +52,9 @@ This directory contains comprehensive technical documentation for VEXIS-CLI, inc
 
 ## Version Information
 
-- **Current Version**: 1.0.0
-- **Last Updated**: 2026-03-06
-- **Compatibility**: Python 3.9+
+- **Current Version**: 2.1.0
+- **Last Updated**: 2026-05-01
+- **Compatibility**: Python 3.8+
 
 ## Support
 

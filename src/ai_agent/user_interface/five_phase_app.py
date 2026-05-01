@@ -19,7 +19,8 @@ from ..utils.config import load_config
 class FivePhaseAIAgent:
     """5-Phase Pipeline AI Agent implementing the complete architecture"""
     
-    def __init__(self, provider: str = None, model: str = None, config_path: Optional[str] = None):
+    def __init__(self, provider: str = None, model: str = None, config_path: Optional[str] = None, 
+                 telegram_bot=None):
         self.config = load_config(config_path) if config_path else load_config()
         self.logger = get_logger("five_phase_app")
         
@@ -30,7 +31,8 @@ class FivePhaseAIAgent:
             "max_iterations": getattr(self.config.engine, 'max_iterations', 10),
         }
         
-        self.engine = FivePhaseEngine(provider=provider, model=model, config=engine_config)
+        self.engine = FivePhaseEngine(provider=provider, model=model, config=engine_config, 
+                                     telegram_bot=telegram_bot)
         
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -38,7 +40,7 @@ class FivePhaseAIAgent:
         
         self.logger.info("5-Phase Pipeline AI Agent initialized")
     
-    def run(self, instruction: str, options: Dict[str, Any]) -> int:
+    def run(self, instruction: str, options: Dict[str, Any], conversation_history=None) -> int:
         """Run AI Agent with instruction using 5-phase pipeline"""
         try:
             self.logger.info(
@@ -58,8 +60,12 @@ class FivePhaseAIAgent:
                 self.logger.error("Instruction cannot be empty")
                 return 1
             
-            # Execute instruction using 5-phase engine
-            context = self.engine.execute_instruction(instruction)
+            # Execute instruction using 5-phase engine with conversation history
+            context = self.engine.execute_instruction(
+                instruction,
+                conversation_history=conversation_history,
+                telegram_mode=False
+            )
             
             # Determine success based on final phase
             success = context.current_phase == PipelinePhase.COMPLETED
