@@ -77,16 +77,7 @@ Input: {user_prompt}
 
 Summary (one sentence only):''',
 
-            TaskType.PHASE2_COMMAND_EXTRACTION.value: '''Please look at this: {phase_1_output}. This is a relatively long text with many explanations, but please put all the necessary commands into a single code block. You may use only one code block.
-
-CRITICAL EXTRACTION RULES:
-1. Extract ALL executable commands necessary to complete the task
-2. Include verification commands to confirm success (not just completion)
-3. If this is a retry attempt, extract the ALTERNATIVE approach commands
-4. Ensure the code block contains complete, runnable commands - never partial or example-only snippets
-5. Add error handling within the code block where possible (e.g., check if file exists before rm)
-
-The extracted code block will be executed directly in the terminal. It MUST be complete and functional.{conversation_history}''',
+            TaskType.PHASE2_COMMAND_EXTRACTION.value: '''Please look at this: {phase_1_output}. This is a relatively long text with many explanations, but please put all the necessary commands into a single code block. You may use only one code block.{conversation_history}''',
 
             TaskType.PHASE4_LOG_EVALUATION.value: '''I executed the commands to carry out the instruction {user_prompt}. This resulted in the following log: {full_terminal_log_so_far} However, since I am a beginner, I do not know if it succeeded or failed.
 
