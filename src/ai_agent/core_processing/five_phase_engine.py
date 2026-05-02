@@ -81,7 +81,7 @@ class FivePhaseEngine:
         
         # Telegram bot manager
         self.telegram_bot = telegram_bot
-        if self.telegram_bot and not hasattr(self.telegram_bot, 'terminal_history'):
+        if self.telegram_bot and self.telegram_bot.terminal_history is None:
             self.telegram_bot.terminal_history = self.terminal_history
         
         # Configuration
