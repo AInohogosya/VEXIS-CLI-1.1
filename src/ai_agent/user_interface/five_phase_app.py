@@ -28,7 +28,7 @@ class FivePhaseAIAgent:
         engine_config = {
             "command_timeout": getattr(self.config.engine, 'command_timeout', 30),
             "task_timeout": getattr(self.config.engine, 'task_timeout', 300),
-            "max_iterations": getattr(self.config.engine, 'max_iterations', 10),
+            "max_iterations": getattr(self.config.engine, 'max_iterations', 500),
         }
         
         self.engine = FivePhaseEngine(provider=provider, model=model, config=engine_config, 

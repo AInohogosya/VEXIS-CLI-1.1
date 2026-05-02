@@ -53,7 +53,7 @@ execution:
   task_timeout: 300          # seconds per task
   
   # Retry settings
-  max_iterations: 10         # max phase 2-4 loops
+  max_iterations: 500         # max phase 2-4 loops
   auto_recovery: true        # auto-retry on failure
   
   # Phase 2 summarization

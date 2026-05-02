@@ -183,7 +183,7 @@ api:
 engine:
   command_timeout: 30
   task_timeout: 300
-  max_iterations: 10
+  max_iterations: 500
   enable_phase_logging: false
   auto_recovery: true
 

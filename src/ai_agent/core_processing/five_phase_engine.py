@@ -46,7 +46,7 @@ class PipelineContext:
     final_summary: Optional[str] = None
     current_phase: PipelinePhase = PipelinePhase.PHASE1_COMMAND_SUGGESTION
     iteration_count: int = 0
-    max_iterations: int = 10
+    max_iterations: int = 500
     start_time: float = field(default_factory=time.time)
     end_time: Optional[float] = None
     error: Optional[str] = None
@@ -85,7 +85,7 @@ class FivePhaseEngine:
             self.telegram_bot.terminal_history = self.terminal_history
         
         # Configuration
-        self.max_iterations = self.config.get("max_iterations", 10)
+        self.max_iterations = self.config.get("max_iterations", 500)
         self.command_timeout = self.config.get("command_timeout", 30)
         self.task_timeout = self.config.get("task_timeout", 300)
         self.enable_phase2_summarization = self.config.get("enable_phase2_summarization", True)

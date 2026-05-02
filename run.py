@@ -1975,7 +1975,7 @@ def main():
     else:
         print(f"\nAI Agent executing: {instruction}")
     
-    max_iterations = 10
+    max_iterations = 500
     
     # Parse max-iterations if provided
     if "--max-iterations" in sys.argv:
