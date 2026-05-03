@@ -2024,6 +2024,9 @@ def main():
         
         # If in Telegram mode, start the bot and handle messages
         if selected_mode == "telegram" and telegram_bot:
+            # Set environment variable to indicate Telegram mode (prevents interactive prompts)
+            os.environ['VEXIS_TELEGRAM_MODE'] = 'true'
+            
             print("\n📱 Starting Telegram bot mode...")
             print("Send commands to your bot to control the AI agent.")
             print("Press Ctrl+C to stop the bot.")

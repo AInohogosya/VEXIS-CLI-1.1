@@ -126,9 +126,12 @@ class VisionAPIClient:
                     }
                     handle_ollama_error(result.error, context, display_to_user=True)
                     
-                    # Prompt user to sign in
+                    # Prompt user to sign in (only in Normal mode - NEVER in Telegram mode)
                     import sys
-                    if sys.stdin.isatty():  # Only prompt if running in terminal
+                    import os
+                    # Check if running in Telegram mode via environment variable
+                    is_telegram_mode = os.getenv('VEXIS_TELEGRAM_MODE', '').lower() in ('true', '1', 'yes')
+                    if sys.stdin.isatty() and not is_telegram_mode:  # Only prompt if in terminal AND not in Telegram mode
                         try:
                             choice = input("\nWould you like to sign in to Ollama now? (y/n): ").lower().strip()
                             if choice in ['y', 'yes']:
@@ -142,6 +145,9 @@ class VisionAPIClient:
                                     print("✗ Failed to initiate sign-in.")
                         except (KeyboardInterrupt, EOFError):
                             print("\nOperation cancelled.")
+                    elif is_telegram_mode:
+                        # In Telegram mode, log the issue but don't block execution
+                        self.logger.info("Ollama authentication required but running in Telegram mode - skipping interactive sign-in prompt")
                 except ImportError:
                     pass  # Fallback to just logging the error
             return APIResponse(
