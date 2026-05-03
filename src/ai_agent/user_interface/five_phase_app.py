@@ -29,12 +29,6 @@ class FivePhaseAIAgent:
             "command_timeout": getattr(self.config.engine, 'command_timeout', 30),
             "task_timeout": getattr(self.config.engine, 'task_timeout', 300),
             "max_iterations": getattr(self.config.engine, 'max_iterations', 500),
-            # RAM management configuration
-            "ram_max_usage_percentage": getattr(self.config.ram, 'max_usage_percentage', 70.0),
-            "ram_resume_percentage": getattr(self.config.ram, 'resume_percentage', 35.0),
-            "ram_check_interval": getattr(self.config.ram, 'check_interval', 1.0),
-            "ram_enable_auto_pause": getattr(self.config.ram, 'enable_auto_pause', True),
-            "ram_enable_command_limits": getattr(self.config.ram, 'enable_command_limits', True),
         }
         
         self.engine = FivePhaseEngine(provider=provider, model=model, config=engine_config, 

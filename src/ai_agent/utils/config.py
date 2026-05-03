@@ -106,16 +106,6 @@ class TelegramConfig:
 
 
 @dataclass
-class RAMConfig:
-    """RAM management configuration"""
-    max_usage_percentage: float = 70.0  # 70% threshold for command blocking
-    resume_percentage: float = 35.0     # 35% threshold for auto-resume
-    check_interval: float = 1.0         # Check RAM every second
-    enable_auto_pause: bool = True       # Enable automatic pause/resume
-    enable_command_limits: bool = True   # Enable command execution limits
-
-
-@dataclass
 class ExecutionConfig:
     """Execution mode configuration"""
     mode: str = "auto"  # "auto", "normal", or "telegram"
@@ -131,7 +121,6 @@ class Config:
     engine: EngineConfig = field(default_factory=EngineConfig)
     telegram: TelegramConfig = field(default_factory=TelegramConfig)
     execution: ExecutionConfig = field(default_factory=ExecutionConfig)
-    ram: RAMConfig = field(default_factory=RAMConfig)
     
     # Platform-specific settings
     platform: Dict[str, Any] = field(default_factory=dict)

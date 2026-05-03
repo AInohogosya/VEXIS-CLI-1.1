@@ -20,7 +20,6 @@ from ..external_integration.model_runner import ModelRunner, TaskType, ModelRequ
 from ..external_integration.telegram_bot import TelegramBotManager, ConversationHistory
 from ..utils.exceptions import ExecutionError, ValidationError
 from ..utils.logger import get_logger
-from ..utils.ram_manager import get_ram_manager, RamConfig
 from .terminal_history import TerminalHistory, get_terminal_history, TerminalEntryType
 
 
@@ -80,16 +79,6 @@ class FivePhaseEngine:
         # Initialize model runner with runtime provider and model
         self.model_runner = ModelRunner(provider=provider, model=model, config=self.config)
         
-        # Initialize RAM manager
-        ram_config = RamConfig(
-            max_usage_percentage=self.config.get("ram_max_usage_percentage", 70.0),
-            resume_percentage=self.config.get("ram_resume_percentage", 35.0),
-            check_interval=self.config.get("ram_check_interval", 1.0),
-            enable_auto_pause=self.config.get("ram_enable_auto_pause", True),
-            enable_command_limits=self.config.get("ram_enable_command_limits", True)
-        )
-        self.ram_manager = get_ram_manager(ram_config)
-        
         # Telegram bot manager
         self.telegram_bot = telegram_bot
         if self.telegram_bot and self.telegram_bot.terminal_history is None:
@@ -101,46 +90,7 @@ class FivePhaseEngine:
         self.task_timeout = self.config.get("task_timeout", 300)
         self.enable_phase2_summarization = self.config.get("enable_phase2_summarization", True)
         
-        # Set up RAM manager callbacks
-        self.ram_manager.add_pause_callback(self._on_system_paused)
-        self.ram_manager.add_resume_callback(self._on_system_resumed)
-        
-        # Start RAM monitoring
-        self.ram_manager.start_monitoring()
-        
-        self.logger.info("5-Phase Pipeline Engine initialized with RAM management")
-    
-    def _on_system_paused(self):
-        """Callback called when system is paused due to RAM constraints"""
-        self.logger.warning("System paused due to RAM constraints - all operations suspended")
-        
-        # Send notification via Telegram if available
-        if hasattr(self, '_current_context') and self._current_context and self._current_context.telegram_mode:
-            if self.telegram_bot and self._current_context.telegram_user_id:
-                try:
-                    ram_info = self.ram_manager.get_ram_info()
-                    self._send_telegram_message_sync(
-                        self._current_context.telegram_user_id,
-                        f"⚠️ **System Paused**\n\nThe AI agent has been automatically paused due to high RAM usage.\n\nCurrent RAM usage: {ram_info.usage_percentage:.1f}%\nThreshold: {self.ram_manager.config.max_usage_percentage}%\n\nThe system will automatically resume when RAM usage drops below {self.ram_manager.config.resume_percentage}%."
-                    )
-                except Exception as e:
-                    self.logger.error(f"Failed to send pause notification to Telegram: {e}")
-    
-    def _on_system_resumed(self):
-        """Callback called when system is resumed after RAM constraints are resolved"""
-        self.logger.info("System resumed - RAM usage has normalized")
-        
-        # Send notification via Telegram if available
-        if hasattr(self, '_current_context') and self._current_context and self._current_context.telegram_mode:
-            if self.telegram_bot and self._current_context.telegram_user_id:
-                try:
-                    ram_info = self.ram_manager.get_ram_info()
-                    self._send_telegram_message_sync(
-                        self._current_context.telegram_user_id,
-                        f"✅ **System Resumed**\n\nThe AI agent has automatically resumed operations.\n\nCurrent RAM usage: {ram_info.usage_percentage:.1f}%\nResume threshold: {self.ram_manager.config.resume_percentage}%\n\nTask execution will continue."
-                    )
-                except Exception as e:
-                    self.logger.error(f"Failed to send resume notification to Telegram: {e}")
+        self.logger.info("5-Phase Pipeline Engine initialized")
     
     def execute_instruction(self, user_prompt: str, conversation_history: Optional[ConversationHistory] = None,
                        telegram_mode: bool = False, telegram_user_id: Optional[int] = None) -> PipelineContext:
@@ -167,25 +117,8 @@ class FivePhaseEngine:
             metadata={"os_info": self._get_os_info()}
         )
         
-        # Store current context for RAM callbacks
+        # Store current context for callbacks
         self._current_context = context
-        
-        # Check if system is currently paused before starting
-        if self.ram_manager.is_paused:
-            self.logger.warning("Cannot start instruction - system is currently paused due to RAM constraints")
-            if telegram_mode and self.telegram_bot and telegram_user_id:
-                try:
-                    ram_info = self.ram_manager.get_ram_info()
-                    self._send_telegram_message_sync(
-                        telegram_user_id,
-                        f"⏸️ **Task Queued**\n\nYour task has been queued but cannot start because the system is currently paused due to high RAM usage.\n\nCurrent RAM usage: {ram_info.usage_percentage:.1f}%\nThe task will automatically start when RAM usage drops below {self.ram_manager.config.resume_percentage}%."
-                    )
-                except Exception as e:
-                    self.logger.error(f"Failed to send queue notification to Telegram: {e}")
-            
-            context.error = "System paused due to RAM constraints"
-            context.current_phase = PipelinePhase.FAILED
-            return context
         
         try:
             # Phase 1: Command Suggestion
@@ -525,25 +458,6 @@ class FivePhaseEngine:
                 return False
             
             self.logger.info(f"Phase 3: Executing {len(commands)} commands in batch")
-            
-            # Check RAM usage before executing commands
-            can_execute, reason = self.ram_manager.can_execute_command()
-            if not can_execute:
-                self.logger.error(f"Phase 3: Command execution blocked - {reason}")
-                
-                # Send RAM limit notification via Telegram
-                if context.telegram_mode and self.telegram_bot and context.telegram_user_id:
-                    try:
-                        ram_info = self.ram_manager.get_ram_info()
-                        self._send_telegram_message_sync(
-                            context.telegram_user_id,
-                            f"🚫 **Command Execution Blocked**\n\n{reason}\n\nCurrent RAM usage: {ram_info.usage_percentage:.1f}%\nThreshold: {self.ram_manager.config.max_usage_percentage}%\n\nThe task will automatically resume when RAM usage drops below {self.ram_manager.config.resume_percentage}%."
-                        )
-                    except Exception as e:
-                        self.logger.error(f"Failed to send RAM limit notification to Telegram: {e}")
-                
-                context.error = f"Command execution blocked due to RAM limit: {reason}"
-                return False
             
             # Execute all commands in a single batch (maintaining same terminal session)
             result = self.terminal_history.execute_commands_batch(
@@ -898,10 +812,8 @@ class FivePhaseEngine:
         return commands
     
     def cleanup(self):
-        """Clean up resources and stop monitoring"""
-        if hasattr(self, 'ram_manager') and self.ram_manager:
-            self.ram_manager.stop_monitoring()
-            self.logger.info("RAM monitoring stopped during cleanup")
+        """Clean up resources"""
+        pass
     
     def __del__(self):
         """Destructor to ensure cleanup"""
