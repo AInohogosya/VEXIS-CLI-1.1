@@ -394,35 +394,54 @@ class TelegramBotManager:
         if not TELEGRAM_AVAILABLE:
             self.logger.error("Cannot start bot: python-telegram-bot not installed")
             return False
-        
+
         if not self.bot_token:
             self.logger.error("Cannot start bot: bot_token not set")
             return False
-        
-        try:
-            # Create application
-            self.application = Application.builder().token(self.bot_token).build()
-            
-            # Add handlers
-            self.application.add_handler(CommandHandler("start", self.start_command))
-            self.application.add_handler(CommandHandler("reset", self.reset_command))
-            self.application.add_handler(CommandHandler("help", self.help_command))
-            self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
-            
-            # Start queue processor thread
-            self._start_queue_processor()
-            
-            # Start bot
-            self.is_running = True
-            self.logger.info("Starting Telegram bot...")
-            self.application.run_polling(allowed_updates=Update.ALL_TYPES)
-            
-            return True
-        except Exception as e:
-            self.logger.error(f"Error starting bot: {e}")
-            self.is_running = False
-            self._stop_queue_processor()
-            return False
+
+        # Outer loop to ensure session remains active after task completion
+        while True:
+            try:
+                # Create application
+                self.application = Application.builder().token(self.bot_token).build()
+
+                # Add handlers
+                self.application.add_handler(CommandHandler("start", self.start_command))
+                self.application.add_handler(CommandHandler("reset", self.reset_command))
+                self.application.add_handler(CommandHandler("help", self.help_command))
+                self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
+
+                # Start queue processor thread
+                self._start_queue_processor()
+
+                # Start bot
+                self.is_running = True
+                self.logger.info("Starting Telegram bot...")
+                self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+                # After run_polling returns (e.g., due to network error),
+                # the loop will restart and wait for the next task
+                self.logger.info("Telegram bot polling stopped, restarting to wait for next task...")
+                self.is_running = False
+                self._stop_queue_processor()
+
+                # Small delay before restarting to avoid rapid restart loops
+                time.sleep(2)
+
+            except KeyboardInterrupt:
+                self.logger.info("Keyboard interrupt received, stopping Telegram bot")
+                self.is_running = False
+                self._stop_queue_processor()
+                break
+            except Exception as e:
+                self.logger.error(f"Error in Telegram bot: {e}")
+                self.is_running = False
+                self._stop_queue_processor()
+                # Wait before restarting to avoid rapid error loops
+                self.logger.info("Waiting 5 seconds before restarting...")
+                time.sleep(5)
+
+        return True
     
     def stop_bot(self):
         """Stop the Telegram bot"""
