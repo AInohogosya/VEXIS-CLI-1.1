@@ -172,6 +172,10 @@ class TelegramBotManager:
         # Callback for processing messages
         self.message_callback: Optional[Callable[[str, int], str]] = None
         
+        # Track running tasks per user for cancellation
+        self._current_tasks: Dict[int, asyncio.Task] = {}
+        self._task_lock = asyncio.Lock()
+        
         # Application instance
         self.application: Optional[Application] = None
         
@@ -259,9 +263,32 @@ class TelegramBotManager:
             "Just send any instruction and I'll execute it on your computer!"
         )
     
+    async def _cancel_user_task(self, user_id: int):
+        """Cancel any running task for the specified user"""
+        async with self._task_lock:
+            if user_id in self._current_tasks:
+                task = self._current_tasks[user_id]
+                if not task.done():
+                    self.logger.info(f"Cancelling running task for user {user_id}")
+                    task.cancel()
+                    try:
+                        await asyncio.wait_for(task, timeout=2.0)
+                    except (asyncio.CancelledError, asyncio.TimeoutError):
+                        pass
+                del self._current_tasks[user_id]
+    
+    async def _process_message_async(self, user_message: str, user_id: int, 
+                                      processing_msg, history) -> str:
+        """Process message asynchronously with cancellation support"""
+        if self.message_callback:
+            # Run callback in thread pool to allow cancellation
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, self.message_callback, user_message, user_id)
+        return "⚠️ Message callback not set. Bot not properly configured."
+    
     @retry_on_network_error(max_retries=10, initial_delay=1.0, backoff_factor=2.0)
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle incoming messages"""
+        """Handle incoming messages - cancels previous task and starts new one immediately"""
         user_id = update.effective_user.id
         
         if not self._is_user_allowed(user_id):
@@ -278,6 +305,9 @@ class TelegramBotManager:
             await self.reset_command(update, context)
             return
         
+        # Cancel any running task for this user immediately
+        await self._cancel_user_task(user_id)
+        
         # Add user message to conversation history
         history = self.get_conversation_history(user_id)
         history.add_message("user", user_message)
@@ -285,10 +315,24 @@ class TelegramBotManager:
         # Send processing message
         processing_msg = await update.message.reply_text("⏳ Processing your request...")
         
-        # Process message using callback
-        if self.message_callback:
-            try:
-                response = self.message_callback(user_message, user_id)
+        # Create and track new task for this user
+        async with self._task_lock:
+            task = asyncio.create_task(
+                self._handle_message_task(user_id, user_message, processing_msg, history)
+            )
+            self._current_tasks[user_id] = task
+    
+    async def _handle_message_task(self, user_id: int, user_message: str, 
+                                    processing_msg, history):
+        """Actual message processing task that can be cancelled"""
+        try:
+            if self.message_callback:
+                response = await self._process_message_async(user_message, user_id, processing_msg, history)
+                
+                # Check if task was cancelled
+                if asyncio.current_task().cancelled():
+                    self.logger.info(f"Task for user {user_id} was cancelled, skipping response")
+                    return
                 
                 # Add assistant response to conversation history
                 history.add_message("assistant", response)
@@ -303,11 +347,27 @@ class TelegramBotManager:
                 
                 # Process any queued messages (e.g., Phase 2 summaries)
                 await self.process_message_queue()
-            except Exception as e:
-                self.logger.error(f"Error processing message: {e}")
+            else:
+                await processing_msg.edit_text("⚠️ Message callback not set. Bot not properly configured.")
+                
+        except asyncio.CancelledError:
+            self.logger.info(f"Task for user {user_id} cancelled - switching to new task")
+            try:
+                await processing_msg.edit_text("🔄 Task cancelled - processing new request...")
+            except:
+                pass
+            raise
+        except Exception as e:
+            self.logger.error(f"Error processing message: {e}")
+            try:
                 await processing_msg.edit_text(f"❌ Error processing your request: {str(e)}")
-        else:
-            await processing_msg.edit_text("⚠️ Message callback not set. Bot not properly configured.")
+            except:
+                pass
+        finally:
+            # Clean up task reference
+            async with self._task_lock:
+                if user_id in self._current_tasks and self._current_tasks[user_id] == asyncio.current_task():
+                    del self._current_tasks[user_id]
     
     def _is_user_allowed(self, user_id: int) -> bool:
         """Check if user is allowed to use the bot"""
