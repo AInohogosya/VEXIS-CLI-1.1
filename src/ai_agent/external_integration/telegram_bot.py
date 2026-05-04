@@ -285,61 +285,27 @@ class TelegramBotManager:
         # Send processing message
         processing_msg = await update.message.reply_text("⏳ Processing your request...")
         
-        # Process message using callback with retry for "Message is too long"
+        # Process message using callback
         if self.message_callback:
-            max_retries = 5
-            retry_count = 0
-            last_error = None
-            
-            while retry_count <= max_retries:
-                try:
-                    # Prepare the message to send to AI
-                    if retry_count == 0:
-                        # First attempt: original message
-                        ai_message = user_message
-                    else:
-                        # Retry: ask AI to make it shorter
-                        ai_message = f"Your previous response was too long (Telegram limit is 4096 characters). Please provide a more concise version in under 3000 characters. Original request: {user_message}"
-                    
-                    response = self.message_callback(ai_message, user_id)
-                    
-                    # Check if response is too long before sending
-                    if len(response) > 4000:
-                        self.logger.warning(f"Response too long ({len(response)} chars), retry attempt {retry_count + 1}/{max_retries}")
-                        retry_count += 1
-                        continue
-                    
-                    # Add assistant response to conversation history
-                    history.add_message("assistant", response)
-                    
-                    # Update processing message with response
-                    await processing_msg.edit_text(response)
-                    
-                    # Process any queued messages (e.g., Phase 2 summaries)
-                    await self.process_message_queue()
-                    return
-                    
-                except Exception as e:
-                    error_msg = str(e).lower()
-                    if "message is too long" in error_msg or "too long" in error_msg:
-                        self.logger.warning(f"Message too long error, retry attempt {retry_count + 1}/{max_retries}")
-                        retry_count += 1
-                        if retry_count <= max_retries:
-                            await processing_msg.edit_text(f"⏳ Response too long, regenerating shorter version (attempt {retry_count + 1}/{max_retries + 1})...")
-                            continue
-                        else:
-                            last_error = "Response too long after 5 retry attempts"
-                            break
-                    else:
-                        # Other errors, don't retry
-                        self.logger.error(f"Error processing message: {e}")
-                        await processing_msg.edit_text(f"❌ Error processing your request: {str(e)}")
-                        return
-            
-            # Max retries reached
-            if last_error:
-                self.logger.error(last_error)
-                await processing_msg.edit_text(f"❌ {last_error}. Please try a simpler request.")
+            try:
+                response = self.message_callback(user_message, user_id)
+                
+                # Add assistant response to conversation history
+                history.add_message("assistant", response)
+                
+                # Truncate long messages if exceeds Telegram limit (4096 chars)
+                if len(response) > 4000:
+                    self.logger.info(f"Response is {len(response)} chars, truncating with [omitted]")
+                    response = self._truncate_message(response, max_length=4000)
+                
+                # Update processing message with response
+                await processing_msg.edit_text(response)
+                
+                # Process any queued messages (e.g., Phase 2 summaries)
+                await self.process_message_queue()
+            except Exception as e:
+                self.logger.error(f"Error processing message: {e}")
+                await processing_msg.edit_text(f"❌ Error processing your request: {str(e)}")
         else:
             await processing_msg.edit_text("⚠️ Message callback not set. Bot not properly configured.")
     
@@ -350,12 +316,35 @@ class TelegramBotManager:
             return True
         return user_id in self.allowed_user_ids
     
+    def _truncate_message(self, message: str, max_length: int = 4000) -> str:
+        """Truncate message if it exceeds max length, adding [omitted] in the middle.
+        
+        Keeps beginning and end of message, omitting the middle portion.
+        Format: "<beginning> [omitted] <end>"
+        """
+        if len(message) <= max_length:
+            return message
+        
+        omitted_tag = " [omitted] "
+        available_space = max_length - len(omitted_tag)
+        half_space = available_space // 2
+        
+        beginning = message[:half_space]
+        end = message[-half_space:]
+        
+        return f"{beginning}{omitted_tag}{end}"
+    
     @retry_on_network_error(max_retries=10, initial_delay=1.0, backoff_factor=2.0)
     async def send_message(self, chat_id: int, message: str):
         """Send a message to a specific chat"""
         if not self.application:
             self.logger.error("Telegram application not initialized")
             return False
+        
+        # Truncate if too long
+        if len(message) > 4000:
+            self.logger.warning(f"Message too long ({len(message)} chars), truncating with [omitted]")
+            message = self._truncate_message(message, max_length=4000)
         
         await self.application.bot.send_message(chat_id=chat_id, text=message)
         return True
